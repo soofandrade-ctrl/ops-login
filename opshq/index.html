@@ -49,7 +49,7 @@ const TEAM_PROFILES = {
   "mario@finanzasparamislatinos.com":  { name:"Mario",   role:"Coach",                init:"MA", color:"#E1F5EE", tc:"#0F6E56", access:"coach"   },
   "nelly@finanzasparamislatinos.com":  { name:"Nelly",   role:"Servicio al Cliente",  init:"NE", color:"#FEF3E2", tc:"#854F0B", access:"service" },
   "regina@finanzasparamislatinos.com": { name:"Regina",  role:"Video Editor",         init:"RE", color:"#FBEAF0", tc:"#993556", access:"editor"  },
-  "alli@finanzasparamislatinos.com":   { name:"Alli",    role:"Diseño + Social Media",init:"AL", color:"#EEEDFE", tc:"#534AB7", access:"design"  },
+  "Alejandra@finanzasparamislatinos.com":   { name:"Ale",    role:"Diseño + Social Media",init:"AL", color:"#EEEDFE", tc:"#534AB7", access:"design"  },
   "andres@finanzasparamislatinos.com": { name:"Andres",  role:"Closer / Call Setter", init:"AN2",color:"#EAF3DE", tc:"#3B6D11", access:"sales"   },
   "sam@finanzasparamislatinos.com":    { name:"Sam",     role:"Thumbnail Designer",   init:"SA", color:"#FEF3E2", tc:"#993C1D", access:"design"  },
   "emilio@finanzasparamislatinos.com": { name:"Emilio",  role:"Skool Daily Copy",     init:"EM", color:"#E6F1FB", tc:"#185FA5", access:"copy"    },
@@ -154,7 +154,7 @@ const TASK_TEMPLATES = {
     "Jaz approves idea",
     "Write script (short-form or long-form)",
     "Script approved by Jaz",
-    "Alli creates Canva description/thumbnail brief",
+    "Ale creates Canva description/thumbnail brief",
     "Sam designs thumbnail",
     "Jaz records video",
     "Regina edits long-form",
@@ -180,10 +180,10 @@ const TASK_TEMPLATES = {
   "Social Media Carousel": [
     "Sophia creates content idea",
     "Jaz approves",
-    "Alli designs carousel in Canva",
+    "Ale designs carousel in Canva",
     "Sophia reviews design",
-    "Alli posts on Instagram + schedules",
-    "Alli replies to comments/DMs",
+    "Ale posts on Instagram + schedules",
+    "Ale replies to comments/DMs",
   ],
 };
 
@@ -969,7 +969,7 @@ window.openFinancialModal = function() {
   modal.innerHTML = `<div class="modal" onclick="event.stopPropagation()">
     <h3>Add financial entry</h3>
     <div class="modal-row"><label>Type</label><select id="fn-type"><option value="revenue">Revenue</option><option value="payroll">Payroll</option><option value="expense">Expense</option></select></div>
-    <div class="modal-row"><label>Label</label><input type="text" id="fn-label" placeholder="e.g. High-ticket sales, Alli salary, Software tool"/></div>
+    <div class="modal-row"><label>Label</label><input type="text" id="fn-label" placeholder="e.g. High-ticket sales, Ale salary, Software tool"/></div>
     <div class="modal-row"><label>Amount ($)</label><input type="number" id="fn-amount" min="0" placeholder="0"/></div>
     <div class="modal-row"><label>Date</label><input type="date" id="fn-date"/></div>
     <div class="modal-row"><label>Note (optional)</label><input type="text" id="fn-note" placeholder="Any context..."/></div>
