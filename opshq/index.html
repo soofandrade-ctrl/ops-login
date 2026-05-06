@@ -44,12 +44,12 @@ const TEAM_PROFILES = {
   // email: { name, role, init, color, tc, access }
   // ← UPDATE THESE EMAILS to match exactly what's in Firebase Authentication
   "jazmin@finanzasparamislatinos.com": { name:"Jaz",     role:"CEO",                  init:"JZ", color:"#E6F1FB", tc:"#185FA5", access:"ceo"     },
-  "sofia@finanzasparamislatinos.com":  { name:"Sofía",  role:"Ops",                  init:"SO", color:"#EEEDFE", tc:"#534AB7", access:"Ops"     },
+  "sofia@finanzasparamislatinos.com":  { name:"Sophia",  role:"COO",                  init:"SO", color:"#EEEDFE", tc:"#534AB7", access:"coo"     },
   "ana@finanzasparamislatinos.com":    { name:"Ana",     role:"Coach + Servicio",     init:"AN", color:"#FAECE7", tc:"#993C1D", access:"coach"   },
   "mario@finanzasparamislatinos.com":  { name:"Mario",   role:"Coach",                init:"MA", color:"#E1F5EE", tc:"#0F6E56", access:"coach"   },
   "nelly@finanzasparamislatinos.com":  { name:"Nelly",   role:"Servicio al Cliente",  init:"NE", color:"#FEF3E2", tc:"#854F0B", access:"service" },
   "regina@finanzasparamislatinos.com": { name:"Regina",  role:"Video Editor",         init:"RE", color:"#FBEAF0", tc:"#993556", access:"editor"  },
-  "alejandraarango@finanzasparamislatinos.com":   { name:"Ale",    role:"Diseño + Social Media",init:"AL", color:"#EEEDFE", tc:"#534AB7", access:"design"  },
+  "alli@finanzasparamislatinos.com":   { name:"Alli",    role:"Diseño + Social Media",init:"AL", color:"#EEEDFE", tc:"#534AB7", access:"design"  },
   "andres@finanzasparamislatinos.com": { name:"Andres",  role:"Closer / Call Setter", init:"AN2",color:"#EAF3DE", tc:"#3B6D11", access:"sales"   },
   "sam@finanzasparamislatinos.com":    { name:"Sam",     role:"Thumbnail Designer",   init:"SA", color:"#FEF3E2", tc:"#993C1D", access:"design"  },
   "emilio@finanzasparamislatinos.com": { name:"Emilio",  role:"Skool Daily Copy",     init:"EM", color:"#E6F1FB", tc:"#185FA5", access:"copy"    },
@@ -57,7 +57,7 @@ const TEAM_PROFILES = {
 
 // ACCESS LEVELS
 // ceo    → everything including payroll/revenue
-// ops manager    → everything including payroll/expenses, NO individual salaries hidden
+// coo    → everything including payroll/expenses, NO individual salaries hidden
 // coach  → my tasks, community board, updates, time off
 // service→ my tasks, client board, updates, time off
 // editor → my tasks, content hub (video), updates, time off
@@ -65,19 +65,20 @@ const TEAM_PROFILES = {
 // sales  → my tasks, sales board, GHL link, updates, time off
 // copy   → my tasks, content hub (copy), updates, time off
 
-const ADMIN_ACCESS  = ["ceo","ops manager"];
-const FINANCE_ACCESS = ["ceo","ops manager"]; // both Jaz and Sophia see full financials
+const ADMIN_ACCESS  = ["ceo","coo"];
+const FINANCE_ACCESS = ["ceo","coo"]; // both Jaz and Sophia see full financials
 
 // ══════════════════════════════════════════════
 // NAV PER ROLE
 // ══════════════════════════════════════════════
 function getNav(access) {
   const base = [
-    {id:"overview", icon:"🏠", label:"My overview"},
-    {id:"tasks",    icon:"✅", label:"My tasks"},
-    {id:"updates",  icon:"📢", label:"Updates"},
-    {id:"timeoff",  icon:"📅", label:"Time off"},
-    {id:"links",    icon:"🔗", label:"Quick links"},
+    {id:"overview",  icon:"🏠", label:"My overview"},
+    {id:"tasks",     icon:"✅", label:"My tasks"},
+    {id:"calendar",  icon:"📅", label:"Calendar"},
+    {id:"updates",   icon:"📢", label:"Updates"},
+    {id:"timeoff",   icon:"📅", label:"Time off"},
+    {id:"links",     icon:"🔗", label:"Quick links"},
   ];
   const adminExtra = [
     {id:"allTasks",  icon:"📋", label:"All tasks"},
@@ -90,8 +91,8 @@ function getNav(access) {
   const financeExtra = [
     {id:"financials", icon:"💳", label:"Financials"},
   ];
-  const contentRoles = ["ceo","ops manager","editor","design","copy"];
-  const salesRoles   = ["ceo","ops manager","sales"];
+  const contentRoles = ["ceo","coo","editor","design","copy"];
+  const salesRoles   = ["ceo","coo","sales"];
 
   let nav = [...base];
   if (ADMIN_ACCESS.includes(access)) {
@@ -99,20 +100,24 @@ function getNav(access) {
       {id:"overview",   icon:"🏠", label:"Overview"},
       {id:"allTasks",   icon:"✅", label:"All tasks"},
       {id:"content",    icon:"🎬", label:"Content hub"},
+      {id:"training",   icon:"🎓", label:"Training hub"},
       {id:"team",       icon:"👥", label:"Team"},
       {id:"timeoff",    icon:"📅", label:"Time off"},
       {id:"goals",      icon:"🎯", label:"Goals"},
       {id:"analytics",  icon:"📊", label:"Analytics"},
+      {id:"calendar",   icon:"📅", label:"Calendar"},
       {id:"updates",    icon:"📢", label:"Updates"},
       {id:"links",      icon:"🔗", label:"Quick links"},
       {id:"settings",   icon:"⚙️", label:"Settings"},
     ];
     if (FINANCE_ACCESS.includes(access)) {
-      nav.splice(7, 0, {id:"financials", icon:"💳", label:"Financials"});
+      nav.splice(8, 0, {id:"financials", icon:"💳", label:"Financials"});
     }
   } else {
     if (contentRoles.includes(access)) nav.splice(2,0,{id:"content",icon:"🎬",label:"Content hub"});
     if (salesRoles.includes(access))   nav.splice(2,0,{id:"sales",  icon:"📈",label:"Sales board"});
+    if (access === "service") nav.splice(2,0,{id:"calltracker",icon:"📞",label:"Call tracker"});
+    nav.splice(nav.length-1,0,{id:"training",icon:"🎓",label:"Training"});
   }
   return nav;
 }
@@ -124,13 +129,13 @@ const DEFAULT_LINKS = [
   {id:"ghl",      icon:"🔗", name:"GHL CRM",       desc:"Go High Level",   url:"https://app.gohighlevel.com",    roles:["all"]},
   {id:"cal",      icon:"📅", name:"Calendar",       desc:"Google Cal",      url:"https://calendar.google.com",    roles:["all"]},
   {id:"canva",    icon:"🎨", name:"Canva Design",   desc:"Shared Drive",    url:"https://drive.google.com",       roles:["all"]},
-  {id:"ops",      icon:"⚙️", name:"Operations",     desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","ops manager"]},
-  {id:"sales-d",  icon:"💰", name:"Sales Process",  desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","ops manager","sales"]},
-  {id:"skool",    icon:"🎓", name:"Skool Team",     desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","ops manager","coach","service","copy"]},
-  {id:"service",  icon:"🤝", name:"Servicio Cliente",desc:"Shared Drive",   url:"https://drive.google.com",       roles:["ceo","ops manager","coach","service"]},
-  {id:"social",   icon:"📱", name:"Social Media",   desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","ops manager","design"]},
-  {id:"strategy", icon:"🧠", name:"Strategy",       desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","ops manager"]},
-  {id:"youtube",  icon:"▶️", name:"YouTube Team",   desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","ops manager","editor","design"]},
+  {id:"ops",      icon:"⚙️", name:"Operations",     desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","coo"]},
+  {id:"sales-d",  icon:"💰", name:"Sales Process",  desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","coo","sales"]},
+  {id:"skool",    icon:"🎓", name:"Skool Team",     desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","coo","coach","service","copy"]},
+  {id:"service",  icon:"🤝", name:"Servicio Cliente",desc:"Shared Drive",   url:"https://drive.google.com",       roles:["ceo","coo","coach","service"]},
+  {id:"social",   icon:"📱", name:"Social Media",   desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","coo","design"]},
+  {id:"strategy", icon:"🧠", name:"Strategy",       desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","coo"]},
+  {id:"youtube",  icon:"▶️", name:"YouTube Team",   desc:"Shared Drive",    url:"https://drive.google.com",       roles:["ceo","coo","editor","design"]},
 ];
 
 // CONTENT PIPELINE STAGES (mirrors your Notion board)
@@ -138,23 +143,75 @@ const CONTENT_STAGES = [
   "Bank of Ideas",
   "Idea Approved by Jaz",
   "Ideas Not Approved",
-  "Create Canva Description",
-  "Approved Scripts",
-  "Design Ready",
+  "Script in Progress",
+  "Script Approved",
+  "Create Canva Presentation",
+  "Canva Ready",
   "Recording",
+  "Edit Long-form",
+  "Edit Short-form",
+  "Thumbnail Description",
+  "Thumbnail Design",
+  "QA",
   "Upload to Skool",
   "Upload to YouTube",
+  "Post to Social Media",
+  "CTA Comment + Pin",
   "Done",
 ];
 
-const CONTENT_TYPES = ["Youtube Inspired","Community Question","Mini Course","Short Form","Long Form","Carousel","Other"];
+const CONTENT_TYPES = [
+  "YouTube Long-form",
+  "Reel / TikTok",
+  "Analysis",
+  "Carousel",
+  "Story",
+  "Static Post",
+  "Other",
+];
+
+const STAGE_ASSIGNEES = {
+  "Script in Progress":        "Sophia",
+  "Script Approved":           "Sophia",
+  "Create Canva Presentation": "Alli",
+  "Canva Ready":               "Alli",
+  "Recording":                 "Jaz",
+  "Edit Long-form":            "Regina",
+  "Edit Short-form":           "Regina",
+  "Thumbnail Description":     "Alli",
+  "Thumbnail Design":          "Sam",
+  "QA":                        "Sophia",
+  "Upload to Skool":           "Jaz",
+  "Upload to YouTube":         "Alli",
+  "Post to Social Media":      "Alli",
+  "CTA Comment + Pin":         "Alli",
+};
+
+const CONTENT_CHECKLIST = [
+  {key:"ideaApproved",   label:"Idea approved by Jaz"},
+  {key:"scriptDone",     label:"Script written"},
+  {key:"scriptApproved", label:"Script approved"},
+  {key:"canvaReady",     label:"Canva presentation ready"},
+  {key:"recorded",       label:"Recorded"},
+  {key:"editedLong",     label:"Long-form edited"},
+  {key:"editedShort",    label:"Short-form edited"},
+  {key:"thumbnailDesc",  label:"Thumbnail description written"},
+  {key:"thumbnailDone",  label:"Thumbnail designed"},
+  {key:"captionYT",      label:"YouTube caption written"},
+  {key:"captionSocial",  label:"Social caption written"},
+  {key:"qaApproved",     label:"QA approved (Sophia)"},
+  {key:"uploadedSkool",  label:"Uploaded to Skool"},
+  {key:"uploadedYT",     label:"Uploaded to YouTube"},
+  {key:"postedSocial",   label:"Posted to social media"},
+  {key:"ctaAdded",       label:"CTA comment + pinned"},
+];
 const TASK_TEMPLATES = {
   "YouTube Video": [
     "Bank of Ideas — add concept",
     "Jaz approves idea",
     "Write script (short-form or long-form)",
     "Script approved by Jaz",
-    "Ale creates Canva description/thumbnail brief",
+    "Alli creates Canva description/thumbnail brief",
     "Sam designs thumbnail",
     "Jaz records video",
     "Regina edits long-form",
@@ -180,10 +237,10 @@ const TASK_TEMPLATES = {
   "Social Media Carousel": [
     "Sophia creates content idea",
     "Jaz approves",
-    "Ale designs carousel in Canva",
+    "Alli designs carousel in Canva",
     "Sophia reviews design",
-    "Ale posts on Instagram + schedules",
-    "Ale replies to comments/DMs",
+    "Alli posts on Instagram + schedules",
+    "Alli replies to comments/DMs",
   ],
 };
 
@@ -279,19 +336,22 @@ window.go = function(view) {
   const m = document.getElementById("main");
   m.innerHTML = `<div style="padding:2rem;color:var(--text2);font-size:13px">Loading...</div>`;
   const views = {
-    overview:   renderOverview,
-    allTasks:   renderAllTasks,
-    tasks:      renderMyTasks,
-    content:    renderContentHub,
-    team:       renderTeam,
-    timeoff:    renderTimeOff,
-    goals:      renderGoals,
-    financials: renderFinancials,
-    analytics:  renderAnalytics,
-    updates:    renderUpdates,
-    links:      renderLinks,
-    sales:      renderSalesBoard,
-    settings:   renderSettings,
+    overview:     renderOverview,
+    allTasks:     renderAllTasks,
+    tasks:        renderMyTasks,
+    content:      renderContentHub,
+    training:     renderTrainingHub,
+    calltracker:  renderCallTracker,
+    team:         renderTeam,
+    timeoff:      renderTimeOff,
+    goals:        renderGoals,
+    financials:   renderFinancials,
+    analytics:    renderAnalytics,
+    updates:      renderUpdates,
+    links:        renderLinks,
+    sales:        renderSalesBoard,
+    calendar:     renderCalendar,
+    settings:     renderSettings,
   };
   if (views[view]) views[view]();
   else m.innerHTML = `<div class="page-title">${view}</div><p style="color:var(--text2)">Coming soon</p>`;
@@ -386,30 +446,71 @@ async function renderAdminOverview() {
 }
 
 async function renderMemberOverview() {
-  const snap = await getDocs(query(collection(db,"tasks"), where("assignee","==",currentProfile.name)));
-  const mine = snap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>!t.done);
-  const annSnap = await getDocs(query(collection(db,"announcements"), orderBy("createdAt","desc")));
-  const ann = annSnap.docs.slice(0,3).map(d=>d.data());
+  const [taskSnap, annSnap, asnSnap, progSnap] = await Promise.all([
+    getDocs(query(collection(db,"tasks"), where("assignee","==",currentProfile.name))),
+    getDocs(query(collection(db,"announcements"), orderBy("createdAt","desc"))),
+    getDocs(query(collection(db,"training_assignments"), where("personName","==",currentProfile.name))),
+    getDocs(query(collection(db,"training_progress"), where("uid","==",currentUser.uid))),
+  ]);
+  const mine      = taskSnap.docs.map(d=>({id:d.id,...d.data()})).filter(t=>!t.done);
+  const ann       = annSnap.docs.slice(0,3).map(d=>d.data());
+  const myTracks  = asnSnap.docs.map(d=>d.data().track);
+  const progress  = {};
+  progSnap.docs.forEach(d=>{const x=d.data(); progress[x.lessonKey]=x.done;});
+  const totalLessons = myTracks.reduce((s,t)=>(DEFAULT_TRAINING[t]?.lessons?.length||0)+s,0);
+  const doneLessons  = Object.values(progress).filter(Boolean).length;
+  const trainPct     = totalLessons ? Math.round(doneLessons/totalLessons*100) : 0;
+  const nextLesson   = (() => {
+    for (const track of myTracks) {
+      const lessons = DEFAULT_TRAINING[track]?.lessons||[];
+      const idx = lessons.findIndex((_,i)=>!progress[`${track}:${i}`]);
+      if (idx !== -1) return {track, lesson:lessons[idx], idx};
+    }
+    return null;
+  })();
+
   setMain(`
-  <div class="page-title">Hi, ${currentProfile.name.split(" ")[0]} 👋</div>
-  <div class="metrics two">
-    <div class="metric"><div class="ml">My open tasks</div><div class="mv">${mine.length}</div></div>
-    <div class="metric"><div class="ml">High priority</div><div class="mv" style="color:var(--red)">${mine.filter(t=>t.pri==="high").length}</div></div>
+  <div class="page-title">Hola, ${currentProfile.name.split(" ")[0]} 👋</div>
+  <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+    <div class="metric"><div class="ml">Tareas abiertas</div><div class="mv">${mine.length}</div></div>
+    <div class="metric"><div class="ml">Alta prioridad</div><div class="mv" style="color:var(--red)">${mine.filter(t=>t.pri==="high").length}</div></div>
+    <div class="metric"><div class="ml">Entrenamiento</div><div class="mv" style="color:${trainPct===100?"var(--green)":trainPct>0?"var(--amber)":"var(--text3)"}">${trainPct}%</div><div class="ms">${doneLessons}/${totalLessons} lecciones</div></div>
   </div>
+
+  ${nextLesson ? `
+  <div class="card" style="border-left:3px solid var(--blue);cursor:pointer" onclick="go('training')">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:24px">🎓</span>
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">Siguiente lección</div>
+        <div style="font-size:14px;font-weight:500">${nextLesson.lesson.title}</div>
+        <div style="font-size:11px;color:var(--text2)">${nextLesson.track} · ${nextLesson.lesson.duration}</div>
+      </div>
+      <span style="font-size:12px;color:var(--blue);font-weight:500">Ir →</span>
+    </div>
+  </div>` : myTracks.length ? `
+  <div class="card" style="border-left:3px solid var(--green)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:24px">🏆</span>
+      <div><div style="font-size:14px;font-weight:500">¡Entrenamiento completado!</div>
+      <div style="font-size:12px;color:var(--text2)">Has completado todos tus tracks asignados.</div></div>
+    </div>
+  </div>` : ""}
+
   <div class="card">
-    <div class="card-head"><div class="card-title">My tasks</div></div>
+    <div class="card-head"><div class="card-title">Mis tareas</div></div>
     ${mine.length ? mine.slice(0,6).map(t=>`
       <div class="task-row-simple">
         <div class="task-body"><div class="task-name">${t.text}</div>
           <div class="task-sub">Due ${fmtDate(t.due)}</div></div>
         ${badge(t.pri,t.pri)}
-      </div>`).join("") : empty("All caught up! 🎉")}
+      </div>`).join("") : empty("¡Todo al día! 🎉")}
   </div>
   <div class="card">
-    <div class="card-head"><div class="card-title">Team updates</div></div>
+    <div class="card-head"><div class="card-title">Updates del equipo</div></div>
     ${ann.map(a=>`<div class="announce"><div class="announce-title">${a.text}</div>
-      <div class="announce-meta">Posted by ${a.by} · ${a.createdAt?.toDate?.()?.toLocaleDateString()||"recently"}</div>
-    </div>`).join("")||empty("No updates yet")}
+      <div class="announce-meta">Posteado por ${a.by} · ${a.createdAt?.toDate?.()?.toLocaleDateString()||"recientemente"}</div>
+    </div>`).join("")||empty("No hay updates aún")}
   </div>`);
 }
 
@@ -482,11 +583,49 @@ window.saveTask = async function() {
 
 window.openTemplateModal = function() {
   document.getElementById("template-modal").style.display = "flex";
-  document.getElementById("tmpl-list").innerHTML = Object.keys(TASK_TEMPLATES).map(k=>
-    `<div class="tmpl-item" onclick="applyTemplate('${k}')">
-      <div style="font-size:13px;font-weight:500">${k}</div>
-      <div style="font-size:11px;color:var(--text2)">${TASK_TEMPLATES[k].length} steps</div>
+  document.getElementById("tmpl-list").innerHTML = Object.keys(TASK_TEMPLATES).map(k=>`
+    <div class="tmpl-item" style="margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:600">${k}</div>
+        <div style="display:flex;gap:4px">
+          <button class="btn" style="font-size:10px;padding:3px 8px" onclick="expandTemplate('${k}',this)">Show steps</button>
+          <button class="btn primary" style="font-size:10px;padding:3px 8px" onclick="applyTemplate('${k}')">Use ✓</button>
+        </div>
+      </div>
+      <div id="tmpl-steps-${k.replace(/[^a-z0-9]/gi,'_')}" style="display:none">
+        ${TASK_TEMPLATES[k].map((step,i)=>`
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:0.5px solid var(--border)">
+            <span style="font-size:11px;color:var(--text3);min-width:20px">${i+1}.</span>
+            <input type="text" value="${step}" onchange="TASK_TEMPLATES['${k}'][${i}]=this.value"
+              style="flex:1;font-size:12px;padding:4px 8px;border-radius:5px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text)"/>
+            <button onclick="removeTemplateStep('${k}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px">✕</button>
+          </div>`).join("")}
+        <button onclick="addTemplateStep('${k}')" class="btn" style="font-size:11px;margin-top:6px;width:100%">+ Add step</button>
+      </div>
     </div>`).join("");
+};
+
+window.expandTemplate = function(name, btn) {
+  const id = "tmpl-steps-"+name.replace(/[^a-z0-9]/gi,"_");
+  const el = document.getElementById(id); if(!el) return;
+  const showing = el.style.display!=="none";
+  el.style.display = showing?"none":"block";
+  btn.textContent = showing?"Show steps":"Hide steps";
+};
+
+window.removeTemplateStep = function(name, idx) {
+  TASK_TEMPLATES[name].splice(idx,1);
+  openTemplateModal();
+};
+
+window.addTemplateStep = function(name) {
+  TASK_TEMPLATES[name].push("New step");
+  openTemplateModal();
+  // Re-expand
+  setTimeout(()=>{
+    const id="tmpl-steps-"+name.replace(/[^a-z0-9]/gi,"_");
+    const el=document.getElementById(id); if(el) el.style.display="block";
+  },50);
 };
 
 window.closeTemplateModal = function() {
@@ -607,120 +746,279 @@ window.setTaskFilter = function(f,btn) {
 };
 
 // ══════════════════════════════════════════════
-// CONTENT HUB (replaces Notion board)
+// CONTENT HUB
 // ══════════════════════════════════════════════
+let contentTypeFilter = "all";
+
 async function renderContentHub() {
-  setMain(`
-  <div class="page-title">Content hub</div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      ${CONTENT_TYPES.map(t=>`<button class="filter-btn" onclick="filterContent('${t}',this)">${t}</button>`).join("")}
-      <button class="filter-btn active" onclick="filterContent('all',this)">All</button>
-    </div>
-    ${isAdmin()?`
-    <div style="display:flex;gap:8px">
-      <button class="btn" onclick="openScriptAI()">🤖 AI Script</button>
-      <button class="btn primary" onclick="openContentModal()">+ New idea</button>
-    </div>`:""}
-  </div>
-  <div class="board-cols" id="content-board">
-    ${CONTENT_STAGES.map((s,i)=>`
-      <div class="board-col">
-        <div class="board-col-title">${s}<span class="board-count" id="count-${i}">0</span></div>
-        <div id="stage-${i}" class="stage-cards">
-          <div style="font-size:11px;color:var(--text3);padding:4px">Loading...</div>
-        </div>
-        ${isAdmin()?`<button class="add-card-btn" onclick="openContentModal('${s}')">+ Add</button>`:""}
-      </div>`).join("")}
-  </div>`);
-  await loadContentBoard("all");
-}
-
-async function loadContentBoard(typeFilter="all") {
-  const snap = await getDocs(query(collection(db,"content"), orderBy("createdAt","desc")));
-  const items = snap.docs.map(d=>({id:d.id,...d.data()}));
-  CONTENT_STAGES.forEach((stage,i) => {
-    let stageItems = items.filter(c=>c.stage===stage);
-    if (typeFilter!=="all") stageItems = stageItems.filter(c=>c.type===typeFilter);
-    document.getElementById(`count-${i}`).textContent = stageItems.length;
-    document.getElementById(`stage-${i}`).innerHTML = stageItems.length
-      ? stageItems.map(c=>contentCardHTML(c)).join("")
-      : `<div style="font-size:11px;color:var(--text3);padding:4px">Empty</div>`;
+  const isAdm = isAdmin();
+  // Build type filter buttons via DOM (avoids nested template literal bug)
+  let filterHTML = "<button class='filter-btn active' id='cf-all' onclick=\"cfFilter('all',this)\">All</button>";
+  CONTENT_TYPES.forEach(t => {
+    filterHTML += `<button class="filter-btn" onclick="cfFilter('${t}',this)">${t}</button>`;
   });
+
+  setMain(`
+  <div class="page-title">🎬 Content hub</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div class="filter-row" style="margin:0" id="cf-filters">${filterHTML}</div>
+    <div style="display:flex;gap:8px">
+      ${isAdm ? '<button class="btn" onclick="openScriptAI()">🤖 AI Script</button>' : ''}
+      <button class="btn" onclick="renderContentList()">☰ List</button>
+      <button class="btn primary" onclick="openContentModal()">+ New idea</button>
+    </div>
+  </div>
+  <div id="content-board-wrap"><div style="padding:1rem;color:var(--text2)">Loading...</div></div>`);
+  await loadContentBoard(contentTypeFilter);
 }
 
-window.filterContent = async function(type,btn) {
-  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+window.cfFilter = async function(type, btn) {
+  contentTypeFilter = type;
+  document.querySelectorAll("#cf-filters .filter-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
-  await loadContentBoard(type==="all"?"all":type);
+  await loadContentBoard(type);
 };
 
-function contentCardHTML(c) {
-  const typeColors = {
-    "Youtube Inspired":"tag-content","Community Question":"tag-link",
-    "Mini Course":"tag-sop","Short Form":"tag-idea",
-    "Long Form":"tag-content","Carousel":"tag-idea","Other":"tag-link"
+async function loadContentBoard(typeFilter) {
+  const snap = await getDocs(query(collection(db,"content"), orderBy("createdAt","desc")));
+  const all  = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  const items = typeFilter === "all" ? all : all.filter(c => c.type === typeFilter);
+  const wrap = document.getElementById("content-board-wrap");
+  if (!wrap) return;
+
+  const stageColors = {
+    "Bank of Ideas":"#854f0b","Idea Approved by Jaz":"#3b6d11","Ideas Not Approved":"#a32d2d",
+    "Script in Progress":"#185fa5","Script Approved":"#3b6d11","Create Canva Presentation":"#534ab7",
+    "Canva Ready":"#534ab7","Recording":"#185fa5","Edit Long-form":"#185fa5","Edit Short-form":"#185fa5",
+    "Thumbnail Description":"#854f0b","Thumbnail Design":"#854f0b","QA":"#a32d2d",
+    "Upload to Skool":"#3b6d11","Upload to YouTube":"#3b6d11","Post to Social Media":"#3b6d11",
+    "CTA Comment + Pin":"#3b6d11","Done":"#aaa",
   };
-  return `
-  <div class="board-card" onclick="openContentDetail('${c.id}')">
-    <div class="board-card-title">${c.title}</div>
-    ${c.assignee?`<div style="font-size:10px;color:var(--text2);margin:4px 0">${c.assignee}</div>`:""}
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
-      ${c.type?`<span class="board-tag ${typeColors[c.type]||"tag-link"}">${c.type}</span>`:""}
-      ${c.scriptApproved?`<span class="board-tag tag-sop">Script ✓</span>`:""}
-      ${c.canvaReady?`<span class="board-tag tag-content">Canva ✓</span>`:""}
-      ${c.uploaded?`<span class="board-tag tag-sop">Uploaded ✓</span>`:""}
+
+  let html = '<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:1rem">';
+  CONTENT_STAGES.forEach(stage => {
+    const stageItems = items.filter(c => c.stage === stage);
+    const color = stageColors[stage] || "#aaa";
+    html += `<div style="flex-shrink:0;width:190px;background:var(--bg2);border-radius:var(--rl);padding:10px">
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px">
+        <div style="width:7px;height:7px;border-radius:50%;background:${color};flex-shrink:0"></div>
+        <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;flex:1;line-height:1.3">${stage}</div>
+        <span style="font-size:10px;background:var(--bg);border:0.5px solid var(--border);padding:1px 5px;border-radius:6px;color:var(--text2)">${stageItems.length}</span>
+      </div>`;
+    stageItems.forEach(item => {
+      const done = CONTENT_CHECKLIST.filter(ck => item[ck.key]).length;
+      const pct  = Math.round(done / CONTENT_CHECKLIST.length * 100);
+      html += `<div class="board-card" onclick="openContentDetail('${item.id}')">
+        <div style="font-size:12px;font-weight:500;margin-bottom:4px">${item.title}</div>
+        ${item.assignee ? `<div style="font-size:10px;color:var(--text2);margin-bottom:4px">${item.assignee}</div>` : ""}
+        ${item.type ? `<span class="board-tag tag-link" style="margin-bottom:4px;display:inline-block">${item.type}</span>` : ""}
+        <div style="height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:4px">
+          <div style="height:100%;width:${pct}%;background:${pct===100?"var(--green)":pct>50?"var(--amber)":"var(--blue)"}"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text2);margin-top:2px">${done}/${CONTENT_CHECKLIST.length} steps</div>
+      </div>`;
+    });
+    if (isAdmin()) {
+      html += `<button onclick="openContentModal('${stage}')" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:4px 0;width:100%;text-align:left;font-weight:500;margin-top:4px">+ Add</button>`;
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+async function renderContentList() {
+  const snap = await getDocs(query(collection(db,"content"), orderBy("createdAt","desc")));
+  const items = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  let rows = "";
+  items.forEach(c => {
+    const done = CONTENT_CHECKLIST.filter(ck => c[ck.key]).length;
+    const pct  = Math.round(done / CONTENT_CHECKLIST.length * 100);
+    const chk  = key => c[key]
+      ? '<span style="color:var(--green)">✓</span>'
+      : '<span style="color:var(--text3)">○</span>';
+    rows += `<tr style="border-bottom:0.5px solid var(--border);cursor:pointer" onclick="openContentDetail('${c.id}')">
+      <td style="padding:7px 10px;font-weight:500;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.title}</td>
+      <td style="padding:7px 10px;white-space:nowrap;font-size:11px">${c.stage||"—"}</td>
+      <td style="padding:7px 10px;font-size:11px">${c.type||"—"}</td>
+      <td style="padding:7px 10px;font-size:11px">${c.assignee||"—"}</td>
+      <td style="padding:7px 10px;text-align:center">${chk("scriptApproved")}</td>
+      <td style="padding:7px 10px;text-align:center">${chk("canvaReady")}</td>
+      <td style="padding:7px 10px;text-align:center">${chk("editedLong")}</td>
+      <td style="padding:7px 10px;text-align:center">${chk("qaApproved")}</td>
+      <td style="padding:7px 10px;text-align:center">${chk("postedSocial")}</td>
+      <td style="padding:7px 10px;min-width:80px">
+        <div style="display:flex;align-items:center;gap:5px">
+          <div style="flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${pct===100?"var(--green)":pct>50?"var(--amber)":"var(--blue)"}"></div>
+          </div>
+          <span style="font-size:10px;color:var(--text2)">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  setMain(`
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+    <div class="page-title" style="margin:0;flex:1">🎬 Content hub — List</div>
+    <button class="btn" onclick="renderContentHub()">Board view</button>
+    <button class="btn primary" onclick="openContentModal()">+ New idea</button>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="overflow-x:auto">
+      <table style="width:100%;font-size:12px;border-collapse:collapse">
+        <thead><tr style="border-bottom:0.5px solid var(--border);background:var(--bg2)">
+          <th style="text-align:left;padding:7px 10px;font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Title</th>
+          <th style="text-align:left;padding:7px 10px;font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Stage</th>
+          <th style="text-align:left;padding:7px 10px;font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Type</th>
+          <th style="text-align:left;padding:7px 10px;font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Assignee</th>
+          <th style="text-align:center;padding:7px 10px;font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Script</th>
+          <th style="text-align:center;padding:7px 10px;font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Canva</th>
+          <th style="text-align:center;padding:7px 10px;font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Edited</th>
+          <th style="text-align:center;padding:7px 10px;font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">QA</th>
+          <th style="text-align:center;padding:7px 10px;font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Posted</th>
+          <th style="text-align:left;padding:7px 10px;font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase">Progress</th>
+        </tr></thead>
+        <tbody>${rows||'<tr><td colspan="10" style="padding:2rem;text-align:center;color:var(--text2)">No content yet</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`);
+}
+
+window.openContentModal = function(stage) {
+  stage = stage || "Bank of Ideas";
+  const el = document.getElementById("content-modal");
+  let stageOpts = "", typeOpts = "", memberOpts = "";
+  CONTENT_STAGES.forEach(s => { stageOpts += `<option value="${s}" ${s===stage?"selected":""}>${s}</option>`; });
+  CONTENT_TYPES.forEach(t  => { typeOpts  += `<option value="${t}">${t}</option>`; });
+  Object.values(TEAM_PROFILES).forEach(p => {
+    memberOpts += `<option value="${p.name}" ${p.name===currentProfile.name?"selected":""}>${p.name} — ${p.role}</option>`;
+  });
+  el.innerHTML = `<div class="modal" onclick="event.stopPropagation()" style="width:520px;max-height:90vh;overflow-y:auto">
+    <h3>New content idea</h3>
+    <div class="modal-row"><label>Title / idea</label>
+      <input type="text" id="cm-title" placeholder="e.g. Lo que tu banco NO quiere que sepas..."/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="modal-row"><label>Stage</label><select id="cm-stage">${stageOpts}</select></div>
+      <div class="modal-row"><label>Type</label><select id="cm-type">${typeOpts}</select></div>
+    </div>
+    <div class="modal-row"><label>Assignee</label><select id="cm-assignee">${memberOpts}</select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="modal-row"><label>Script due</label><input type="date" id="cm-script-due"/></div>
+      <div class="modal-row"><label>Upload due</label><input type="date" id="cm-upload-due"/></div>
+    </div>
+    <div class="modal-row"><label>Script link (Google Doc)</label>
+      <input type="text" id="cm-script-link" placeholder="https://docs.google.com/..."/></div>
+    <div class="modal-row"><label>Inspiration / notes</label>
+      <textarea id="cm-notes" placeholder="Any context, links, notes..."></textarea></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeContentModal()">Cancel</button>
+      <button class="btn primary" onclick="saveContent()">Add idea</button>
     </div>
   </div>`;
-}
-
-let contentModalStage = "Bank of Ideas";
-window.openContentModal = function(stage="Bank of Ideas") {
-  contentModalStage = stage;
-  document.getElementById("cm-stage").value  = stage;
-  document.getElementById("cm-title").value  = "";
-  document.getElementById("cm-type").value   = "Youtube Inspired";
-  document.getElementById("cm-notes").value  = "";
-  document.getElementById("cm-assignee").value = currentProfile.name;
-  document.getElementById("content-modal").style.display = "flex";
+  el.style.display = "flex";
 };
+
 window.closeContentModal = function() {
   document.getElementById("content-modal").style.display = "none";
 };
+
 window.saveContent = async function() {
-  const title = document.getElementById("cm-title").value.trim(); if(!title) return;
-  await addDoc(collection(db,"content"),{
+  const title = document.getElementById("cm-title")?.value.trim();
+  if (!title) return;
+  const data = {
     title,
-    stage:    document.getElementById("cm-stage").value,
-    type:     document.getElementById("cm-type").value,
-    notes:    document.getElementById("cm-notes").value.trim(),
-    assignee: document.getElementById("cm-assignee").value,
-    scriptApproved: false, canvaReady: false, uploaded: false,
-    createdAt: serverTimestamp(), createdBy: currentProfile.name,
-  });
-  toast("Content idea added ✓"); closeContentModal(); renderContentHub();
+    stage:      document.getElementById("cm-stage")?.value || "Bank of Ideas",
+    type:       document.getElementById("cm-type")?.value  || "",
+    assignee:   document.getElementById("cm-assignee")?.value || currentProfile.name,
+    scriptDue:  document.getElementById("cm-script-due")?.value  || "",
+    uploadDue:  document.getElementById("cm-upload-due")?.value  || "",
+    scriptLink: document.getElementById("cm-script-link")?.value.trim() || "",
+    notes:      document.getElementById("cm-notes")?.value.trim() || "",
+    createdAt:  serverTimestamp(),
+    createdBy:  currentProfile.name,
+  };
+  // Default all checklist to false
+  CONTENT_CHECKLIST.forEach(ck => { data[ck.key] = false; });
+
+  await addDoc(collection(db,"content"), data);
+
+  // Auto-create tasks for due dates
+  if (data.scriptDue) {
+    await addDoc(collection(db,"tasks"), {
+      text: "Script: " + title, assignee: data.assignee || "Sophia",
+      pri:"high", due:data.scriptDue, done:false,
+      recur:"none", notes:"Content hub", subtasks:[], completedDates:[],
+      createdAt:serverTimestamp(), createdBy:currentProfile.name,
+    });
+  }
+  if (data.uploadDue) {
+    await addDoc(collection(db,"tasks"), {
+      text: "Upload: " + title, assignee: "Alli",
+      pri:"med", due:data.uploadDue, done:false,
+      recur:"none", notes:"Content hub", subtasks:[], completedDates:[],
+      createdAt:serverTimestamp(), createdBy:currentProfile.name,
+    });
+  }
+  toast("Content idea added ✓");
+  closeContentModal();
+  renderContentHub();
 };
 
 window.openContentDetail = async function(id) {
   const snap = await getDoc(doc(db,"content",id));
-  const c = snap.data();
-  const stageOptions = CONTENT_STAGES.map(s=>`<option value="${s}" ${c.stage===s?"selected":""}>${s}</option>`).join("");
+  if (!snap.exists()) return;
+  const item = snap.data();
+  const isAdm = isAdmin();
+
+  let stageOpts="", typeOpts="", memberOpts="";
+  CONTENT_STAGES.forEach(s => { stageOpts += `<option value="${s}" ${item.stage===s?"selected":""}>${s}</option>`; });
+  CONTENT_TYPES.forEach(t  => { typeOpts  += `<option value="${t}" ${item.type===t?"selected":""}>${t}</option>`; });
+  Object.values(TEAM_PROFILES).forEach(p => {
+    memberOpts += `<option value="${p.name}" ${item.assignee===p.name?"selected":""}>${p.name}</option>`;
+  });
+
+  let checklistHTML = "";
+  CONTENT_CHECKLIST.forEach(ck => {
+    const checked = item[ck.key] ? "checked" : "";
+    const borderColor = item[ck.key] ? "var(--green)" : "var(--border)";
+    checklistHTML += `<label style="display:flex;align-items:center;gap:7px;font-size:12px;padding:6px 8px;background:var(--bg2);border-radius:6px;cursor:pointer;border:0.5px solid ${borderColor}">
+      <input type="checkbox" id="cd-${ck.key}" ${checked} style="accent-color:var(--green)"> ${ck.label}
+    </label>`;
+  });
+
   const modal = document.createElement("div");
   modal.className = "modal-overlay";
   modal.id = "detail-modal";
-  modal.innerHTML = `<div class="modal" style="width:520px" onclick="event.stopPropagation()">
-    <h3 style="margin-bottom:1rem">${c.title}</h3>
-    <div class="modal-row"><label>Stage</label><select id="cd-stage">${stageOptions}</select></div>
-    <div class="modal-row"><label>Type</label><select id="cd-type">${CONTENT_TYPES.map(t=>`<option ${c.type===t?"selected":""}>${t}</option>`).join("")}</select></div>
-    <div class="modal-row"><label>Assignee</label><select id="cd-assignee">${Object.values(TEAM_PROFILES).map(p=>`<option value="${p.name}" ${c.assignee===p.name?"selected":""}>${p.name}</option>`).join("")}</select></div>
-    <div class="modal-row"><label>Notes / Script link</label><textarea id="cd-notes" style="min-height:80px">${c.notes||""}</textarea></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="cd-script" ${c.scriptApproved?"checked":""}> Script approved</label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="cd-canva" ${c.canvaReady?"checked":""}> Canva ready</label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="cd-uploaded" ${c.uploaded?"checked":""}> Uploaded</label>
+  modal.innerHTML = `<div class="modal" style="width:560px;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <h3 style="margin-bottom:1rem">${item.title}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="modal-row"><label>Stage</label><select id="cd-stage">${stageOpts}</select></div>
+      <div class="modal-row"><label>Type</label><select id="cd-type">${typeOpts}</select></div>
+    </div>
+    <div class="modal-row"><label>Assignee</label><select id="cd-assignee">${memberOpts}</select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="modal-row"><label>Script due</label><input type="date" id="cd-script-due" value="${item.scriptDue||""}"/></div>
+      <div class="modal-row"><label>Upload due</label><input type="date" id="cd-upload-due" value="${item.uploadDue||""}"/></div>
+    </div>
+    <div class="modal-row"><label>Script link (Google Doc)</label>
+      <input type="text" id="cd-script-link" value="${item.scriptLink||""}" placeholder="https://docs.google.com/..."/>
+      ${item.scriptLink ? `<a href="${item.scriptLink}" target="_blank" style="font-size:11px;color:var(--blue);margin-top:3px;display:block">Open script →</a>` : ""}
+    </div>
+    <div class="modal-row"><label>Canva link</label>
+      <input type="text" id="cd-canva-link" value="${item.canvaLink||""}" placeholder="https://canva.com/..."/>
+      ${item.canvaLink ? `<a href="${item.canvaLink}" target="_blank" style="font-size:11px;color:var(--blue);margin-top:3px;display:block">Open Canva →</a>` : ""}
+    </div>
+    <div class="modal-row"><label>Raw video URL</label>
+      <input type="text" id="cd-video-url" value="${item.videoUrl||""}" placeholder="Drive / Dropbox link"/></div>
+    <div class="modal-row"><label>Notes</label>
+      <textarea id="cd-notes" style="min-height:60px">${item.notes||""}</textarea></div>
+    <div style="border-top:0.5px solid var(--border);margin:12px 0 10px;padding-top:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Production checklist</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${checklistHTML}</div>
     </div>
     <div class="modal-btns">
-      ${isAdmin()?`<button class="btn danger" onclick="deleteContent('${id}')">Delete</button>`:""}
+      ${isAdm ? `<button class="btn danger" onclick="deleteContent('${id}')">Delete</button>` : ""}
       <button class="btn" onclick="document.getElementById('detail-modal').remove()">Cancel</button>
       <button class="btn primary" onclick="updateContent('${id}')">Save</button>
     </div>
@@ -729,415 +1027,1180 @@ window.openContentDetail = async function(id) {
 };
 
 window.updateContent = async function(id) {
-  await updateDoc(doc(db,"content",id),{
-    stage:          document.getElementById("cd-stage").value,
-    type:           document.getElementById("cd-type").value,
-    assignee:       document.getElementById("cd-assignee").value,
-    notes:          document.getElementById("cd-notes").value,
-    scriptApproved: document.getElementById("cd-script").checked,
-    canvaReady:     document.getElementById("cd-canva").checked,
-    uploaded:       document.getElementById("cd-uploaded").checked,
-    updatedAt:      serverTimestamp(),
+  const data = {
+    stage:      document.getElementById("cd-stage")?.value,
+    type:       document.getElementById("cd-type")?.value,
+    assignee:   document.getElementById("cd-assignee")?.value,
+    scriptDue:  document.getElementById("cd-script-due")?.value || "",
+    uploadDue:  document.getElementById("cd-upload-due")?.value || "",
+    scriptLink: document.getElementById("cd-script-link")?.value.trim() || "",
+    canvaLink:  document.getElementById("cd-canva-link")?.value.trim()  || "",
+    videoUrl:   document.getElementById("cd-video-url")?.value.trim()   || "",
+    notes:      document.getElementById("cd-notes")?.value || "",
+    updatedAt:  serverTimestamp(),
+    updatedBy:  currentProfile.name,
+  };
+  CONTENT_CHECKLIST.forEach(ck => {
+    data[ck.key] = document.getElementById("cd-" + ck.key)?.checked || false;
   });
+  await updateDoc(doc(db,"content",id), data);
   document.getElementById("detail-modal")?.remove();
-  toast("Updated ✓"); renderContentHub();
+  toast("Updated ✓");
+  renderContentHub();
 };
 
 window.deleteContent = async function(id) {
   if (!confirm("Delete this content item?")) return;
   await deleteDoc(doc(db,"content",id));
   document.getElementById("detail-modal")?.remove();
-  toast("Deleted"); renderContentHub();
+  toast("Deleted");
+  renderContentHub();
 };
 
-// AI Script modal
-window.openScriptAI = function() {
-  document.getElementById("ai-modal").style.display = "flex";
-  document.getElementById("ai-topic").value = "";
-  document.getElementById("ai-type").value  = "short";
-  document.getElementById("ai-result").textContent = "";
+// ══════════════════════════════════════════════
+// TRAINING HUB — individual assignments
+// ══════════════════════════════════════════════
+const DEFAULT_TRAINING = {
+  "Cultura & Visión": {
+    description: "El ADN de Inversiones Para Latinos. Empieza aquí.",
+    lessons: [
+      {title:"¿Quiénes somos y a dónde vamos?", type:"video", url:"", duration:"6 min"},
+      {title:"Reglas de la comunidad y expectativas", type:"doc", url:"", duration:"5 min"},
+      {title:"Tu rol y cómo encajas en el equipo", type:"video", url:"", duration:"8 min"},
+    ]
+  },
+  "Nelly Onboarding": {
+    description: "Todo lo que necesitas saber para las llamadas de activación.",
+    lessons: [
+      {title:"El proceso de activación paso a paso", type:"video", url:"", duration:"10 min"},
+      {title:"Script de bienvenida (memorizar)", type:"doc", url:"", duration:"15 min"},
+      {title:"Cómo abrir una cuenta de broker", type:"video", url:"", duration:"12 min"},
+      {title:"Manejo de objeciones comunes", type:"doc", url:"", duration:"10 min"},
+      {title:"Cómo registrar llamadas en el sistema", type:"video", url:"", duration:"5 min"},
+    ]
+  },
+  "Call Scripts": {
+    description: "Scripts aprobados para cada tipo de llamada.",
+    lessons: [
+      {title:"Script: Primera llamada de activación", type:"doc", url:"", duration:"10 min"},
+      {title:"Script: Seguimiento (no contestaron)", type:"doc", url:"", duration:"5 min"},
+      {title:"Script: Welcome webinar invite", type:"doc", url:"", duration:"5 min"},
+    ]
+  },
+  "Coaching Skills": {
+    description: "Cómo ser un coach de alto impacto.",
+    lessons: [
+      {title:"Estructura de una sesión 1:1 efectiva", type:"video", url:"", duration:"15 min"},
+      {title:"Cómo dar feedback sin desmotivar", type:"doc", url:"", duration:"10 min"},
+      {title:"QA: Estándares mínimos de calidad", type:"video", url:"", duration:"12 min"},
+    ]
+  },
+  "Scripts de Coaching": {
+    description: "Scripts para sesiones de coaching con miembros.",
+    lessons: [
+      {title:"Script: Sesión de bienvenida HT", type:"doc", url:"", duration:"10 min"},
+      {title:"Script: Check-in semanal", type:"doc", url:"", duration:"8 min"},
+      {title:"Cómo manejar a un miembro difícil", type:"video", url:"", duration:"12 min"},
+    ]
+  },
+  "Sales Scripts": {
+    description: "Scripts de ventas y cierre para Andres.",
+    lessons: [
+      {title:"El proceso de venta de High-Ticket", type:"video", url:"", duration:"20 min"},
+      {title:"Script de discovery call", type:"doc", url:"", duration:"15 min"},
+      {title:"Manejo de objeciones: precio, tiempo, miedo", type:"doc", url:"", duration:"15 min"},
+      {title:"El cierre: cómo pedir la decisión", type:"video", url:"", duration:"10 min"},
+    ]
+  },
+  "Content Workflow": {
+    description: "Cómo funciona el pipeline de contenido de punta a punta.",
+    lessons: [
+      {title:"El flujo completo: idea → publicación", type:"video", url:"", duration:"15 min"},
+      {title:"Cómo usar el Content Hub", type:"video", url:"", duration:"10 min"},
+      {title:"Estándares de calidad de contenido", type:"doc", url:"", duration:"8 min"},
+    ]
+  },
+  "Brand Guidelines": {
+    description: "La identidad visual de Inversiones Para Latinos.",
+    lessons: [
+      {title:"Colores, fuentes y logo: cómo usarlos", type:"doc", url:"", duration:"10 min"},
+      {title:"Canva: templates aprobados", type:"video", url:"", duration:"12 min"},
+      {title:"Qué SÍ y qué NO publicar", type:"doc", url:"", duration:"8 min"},
+    ]
+  },
+  "Ops & Sistemas": {
+    description: "Cómo opera el equipo internamente.",
+    lessons: [
+      {title:"SOPs: cómo leerlos y seguirlos", type:"doc", url:"", duration:"10 min"},
+      {title:"GHL: visión general", type:"video", url:"", duration:"15 min"},
+      {title:"Cómo escalar un problema", type:"doc", url:"", duration:"5 min"},
+    ]
+  },
 };
-window.closeAIModal = function() { document.getElementById("ai-modal").style.display="none"; };
-window.generateScript = async function() {
-  const topic = document.getElementById("ai-topic").value.trim(); if(!topic) return;
-  const type  = document.getElementById("ai-type").value;
-  document.getElementById("ai-result").textContent = "Generating...";
-  const prompt = type==="short"
-    ? `Using Jaz Bautista's short-form script style (60-90 sec Reels/TikTok, Spanish, Hook→Value→Payoff→CTA for Latino immigrants learning investing), write a script about: ${topic}`
-    : `Write a YouTube long-form video script in Jaz Bautista's style for Latino immigrants learning investing. Topic: ${topic}. Include intro hook, main sections, and CTA.`;
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})
-    });
-    const data = await res.json();
-    document.getElementById("ai-result").textContent = data.content?.[0]?.text||"Error generating script.";
-  } catch(e) {
-    document.getElementById("ai-result").textContent = "Error: "+e.message;
+
+// assignments stored in Firestore: {personName, track, assignedBy, assignedAt}
+// progress stored in Firestore: {uid, name, track, lessonIndex, lessonKey, done}
+
+async function getMyAssignedTracks() {
+  // Returns array of track names assigned to current user
+  const snap = await getDocs(query(
+    collection(db,"training_assignments"),
+    where("personName","==",currentProfile.name)
+  ));
+  return snap.docs.map(d=>d.data().track);
+}
+
+async function renderTrainingHub() {
+  const isAdm = isAdmin();
+
+  if (isAdm) {
+    await renderAdminTraining();
+  } else {
+    await renderMemberTraining();
   }
-};
-
-// ══════════════════════════════════════════════
-// TEAM
-// ══════════════════════════════════════════════
-async function renderTeam() {
-  const snap = await getDocs(collection(db,"tasks"));
-  const tasks = snap.docs.map(d=>d.data());
-  const members = Object.entries(TEAM_PROFILES);
-  setMain(`
-  <div class="page-title">Team (${members.length})</div>
-  <div class="card">
-    ${members.map(([email,p])=>{
-      const open = tasks.filter(t=>t.assignee===p.name&&!t.done).length;
-      const done = tasks.filter(t=>t.assignee===p.name&&t.done).length;
-      return `<div class="team-row">
-        <div class="avatar" style="width:34px;height:34px;font-size:12px;background:${p.color};color:${p.tc}">${p.init}</div>
-        <div style="flex:1"><div style="font-size:13px;font-weight:500">${p.name}</div>
-          <div style="font-size:11px;color:var(--text2)">${p.role}</div></div>
-        <span class="badge info">${p.access}</span>
-        <span style="font-size:12px;color:var(--text2)">${open} open · ${done} done</span>
-      </div>`;}).join("")}
-  </div>`);
 }
 
-// ══════════════════════════════════════════════
-// TIME OFF
-// ══════════════════════════════════════════════
-async function renderTimeOff() {
-  if (isAdmin()) await renderAdminTimeOff();
-  else await renderMemberTimeOff();
-}
+async function renderAdminTraining() {
+  // Load all assignments
+  const asnSnap = await getDocs(collection(db,"training_assignments"));
+  const assignments = asnSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-async function renderAdminTimeOff() {
-  const snap = await getDocs(query(collection(db,"timeoff"), orderBy("createdAt","desc")));
-  const reqs = snap.docs.map(d=>({id:d.id,...d.data()}));
+  // Load progress
+  const progSnap = await getDocs(collection(db,"training_progress"));
+  const progress  = progSnap.docs.map(d=>d.data());
+
+  const allTracks = Object.keys(DEFAULT_TRAINING);
+  const members   = Object.values(TEAM_PROFILES);
+
   setMain(`
-  <div class="page-title">Time off</div>
-  <div class="card">
-    <div class="card-head"><div class="card-title">All requests</div></div>
-    ${reqs.length ? reqs.map(r=>`
-      <div class="off-req">
-        ${avatar(r.name,28)}
-        <div style="flex:1"><div style="font-size:13px;font-weight:500">${r.name}</div>
-          <div style="font-size:11px;color:var(--text2)">${fmtDate(r.from)}${r.to!==r.from?" – "+fmtDate(r.to):""} · ${r.reason}</div></div>
-        ${badge(r.status,r.status)}
-        ${r.status==="pending"?`
-          <button class="btn primary" style="font-size:11px;padding:4px 8px" onclick="approveOff('${r.id}',true)">Approve</button>
-          <button class="btn danger"  style="font-size:11px;padding:4px 8px" onclick="approveOff('${r.id}',false)">Deny</button>`:""
-        }
-      </div>`).join("") : empty("No requests")}
-  </div>`);
-}
-
-window.approveOff = async function(id, approve) {
-  await updateDoc(doc(db,"timeoff",id),{status: approve?"approved":"denied", reviewedBy: currentProfile.name, reviewedAt: serverTimestamp()});
-  toast(approve ? "Approved ✓" : "Denied"); renderTimeOff();
-};
-
-async function renderMemberTimeOff() {
-  const snap = await getDocs(query(collection(db,"timeoff"), where("name","==",currentProfile.name), orderBy("createdAt","desc")));
-  const mine = snap.docs.map(d=>({id:d.id,...d.data()}));
-  setMain(`
-  <div class="page-title">Request time off</div>
-  <div class="card">
-    <div class="card-head"><div class="card-title">My requests</div></div>
-    ${mine.length ? mine.map(r=>`
-      <div class="off-req">
-        <div style="flex:1"><div style="font-size:13px;font-weight:500">${fmtDate(r.from)}${r.to!==r.from?" – "+fmtDate(r.to):""}</div>
-          <div style="font-size:11px;color:var(--text2)">${r.reason}</div></div>
-        ${badge(r.status,r.status)}
-      </div>`).join("") : empty("No requests yet")}
+  <div class="page-title">🎓 Training hub</div>
+  <div style="display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap">
+    <button class="btn primary" onclick="openAssignTrackModal()">+ Assign track</button>
+    <button class="btn" onclick="openAddLessonModal()">+ Add lesson</button>
+    <button class="btn" onclick="renderTrainingProgress()">📊 Team progress</button>
   </div>
-  <div class="card">
-    <div class="card-head"><div class="card-title">New request</div></div>
-    <div class="date-inputs">
-      <div><label>From</label><input type="date" id="off-from"/></div>
-      <div><label>To</label><input type="date" id="off-to"/></div>
+
+  <div class="two-col" style="margin-bottom:1rem">
+    <!-- LEFT: tracks -->
+    <div>
+      <div class="card-title" style="margin-bottom:10px">Training tracks (${allTracks.length})</div>
+      ${allTracks.map(track => {
+        const t = DEFAULT_TRAINING[track];
+        const assignees = assignments.filter(a=>a.track===track).map(a=>a.personName);
+        return `<div class="card" style="margin-bottom:10px;cursor:pointer" onclick="openTrackDetail('${track}')">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px">
+            <div style="font-size:14px;font-weight:600">${track}</div>
+            <span style="font-size:11px;color:var(--text2);flex-shrink:0;margin-left:8px">${t.lessons?.length||0} lessons</span>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${t.description||""}</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+            ${assignees.length
+              ? assignees.map(n=>{const p=profileOf(n);return`<div class="avatar" style="width:22px;height:22px;font-size:8px;background:${p.color};color:${p.tc}" title="${n}">${initials(n)}</div>`;}).join("")
+              : `<span style="font-size:10px;color:var(--text3)">No one assigned</span>`}
+            <button class="btn" style="font-size:10px;padding:2px 8px;margin-left:4px" onclick="event.stopPropagation();openAssignTrackModal('${track}')">+ Assign</button>
+          </div>
+        </div>`;
+      }).join("")}
     </div>
-    <div class="add-row" style="margin-top:0">
-      <input type="text" id="off-reason" placeholder="Reason (optional)"/>
-      <button class="btn primary" onclick="submitOff()">Submit</button>
+
+    <!-- RIGHT: team assignments -->
+    <div>
+      <div class="card-title" style="margin-bottom:10px">Assignments per person</div>
+      ${members.map(m => {
+        const myTracks = assignments.filter(a=>a.personName===m.name).map(a=>a.track);
+        const totalLessons = myTracks.reduce((s,t)=>(DEFAULT_TRAINING[t]?.lessons?.length||0)+s,0);
+        const doneLessons  = progress.filter(p=>p.name===m.name&&p.done).length;
+        const pct = totalLessons ? Math.round(doneLessons/totalLessons*100) : 0;
+        return `<div class="card" style="margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <div class="avatar" style="width:30px;height:30px;font-size:11px;background:${m.color};color:${m.tc}">${m.init}</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:500">${m.name}</div>
+              <div style="font-size:11px;color:var(--text2)">${m.role}</div>
+            </div>
+            <span style="font-size:12px;font-weight:600;color:${pct===100?"var(--green)":pct>0?"var(--amber)":"var(--text3)"}">${pct}%</span>
+          </div>
+          ${myTracks.length
+            ? `<div style="display:flex;gap:4px;flex-wrap:wrap">
+                ${myTracks.map(t=>`<div style="display:flex;align-items:center;gap:3px;background:var(--bg2);border-radius:5px;padding:2px 6px 2px 8px;font-size:11px">
+                  ${t}
+                  <button onclick="unassignTrack('${m.name}','${t}')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 0 0 3px;line-height:1">✕</button>
+                </div>`).join("")}
+              </div>`
+            : `<div style="font-size:11px;color:var(--text3)">No tracks assigned — <button class="btn" style="font-size:10px;padding:2px 8px" onclick="openAssignTrackModal('','${m.name}')">Assign now</button></div>`}
+        </div>`;
+      }).join("")}
     </div>
   </div>`);
 }
 
-window.submitOff = async function() {
-  const from = document.getElementById("off-from").value; if(!from){alert("Pick a date");return;}
-  const to   = document.getElementById("off-to").value||from;
-  const reason = document.getElementById("off-reason").value||"Personal";
-  await addDoc(collection(db,"timeoff"),{name:currentProfile.name,from,to,reason,status:"pending",createdAt:serverTimestamp()});
-  toast("Request submitted ✓"); renderTimeOff();
-};
+async function renderMemberTraining() {
+  const myTracks = await getMyAssignedTracks();
 
-// ══════════════════════════════════════════════
-// GOALS
-// ══════════════════════════════════════════════
-async function renderGoals() {
-  const snap = await getDocs(query(collection(db,"goals"), orderBy("createdAt","desc")));
-  const goals = snap.docs.map(d=>({id:d.id,...d.data()}));
-  const SM = {track:{cls:"g",label:"On track",c:"var(--green)"},risk:{cls:"a",label:"At risk",c:"var(--amber)"},behind:{cls:"r",label:"Behind",c:"var(--red)"}};
+  if (!myTracks.length) {
+    setMain(`
+    <div class="page-title">🎓 Mi entrenamiento</div>
+    <div class="card" style="text-align:center;padding:2rem">
+      <div style="font-size:32px;margin-bottom:12px">🎓</div>
+      <div style="font-size:15px;font-weight:500;margin-bottom:6px">No tienes entrenamientos asignados aún</div>
+      <div style="font-size:13px;color:var(--text2)">Sophia o Jaz te asignarán los tracks que necesitas pronto.</div>
+    </div>`);
+    return;
+  }
+
+  const progSnap = await getDocs(query(
+    collection(db,"training_progress"),
+    where("uid","==",currentUser.uid)
+  ));
+  const progress = {};
+  progSnap.docs.forEach(d=>{const data=d.data(); progress[data.lessonKey]=data.done;});
+
+  const totalLessons = myTracks.reduce((s,t)=>(DEFAULT_TRAINING[t]?.lessons?.length||0)+s,0);
+  const doneLessons  = Object.values(progress).filter(Boolean).length;
+  const overallPct   = totalLessons ? Math.round(doneLessons/totalLessons*100) : 0;
+
   setMain(`
-  <div class="page-title">Goals — Q2 2026</div>
-  <div class="metrics">
-    <div class="metric"><div class="ml">Total</div><div class="mv">${goals.length}</div></div>
-    <div class="metric"><div class="ml">On track</div><div class="mv" style="color:var(--green)">${goals.filter(g=>g.status==="track").length}</div></div>
-    <div class="metric"><div class="ml">At risk</div><div class="mv" style="color:var(--amber)">${goals.filter(g=>g.status==="risk").length}</div></div>
-    <div class="metric"><div class="ml">Behind</div><div class="mv" style="color:var(--red)">${goals.filter(g=>g.status==="behind").length}</div></div>
+  <div class="page-title">🎓 Mi entrenamiento</div>
+  <div class="metrics two" style="margin-bottom:1.25rem">
+    <div class="metric"><div class="ml">Progreso general</div><div class="mv" style="color:${overallPct===100?"var(--green)":overallPct>40?"var(--amber)":"var(--red)"}">${overallPct}%</div><div class="ms">${doneLessons}/${totalLessons} lecciones</div></div>
+    <div class="metric"><div class="ml">Tracks asignados</div><div class="mv">${myTracks.length}</div></div>
   </div>
-  <div class="card">
-    ${goals.length ? goals.map(g=>{const s=SM[g.status]||SM.track;return`
-      <div class="goal-row">
-        <div style="flex:1.2;min-width:0"><div style="font-size:13px;font-weight:500">${g.name}</div>
-          <div style="font-size:11px;color:var(--text2)">${g.cat} · ${g.owner||""}</div></div>
-        <div style="flex:1.5"><div class="track"><div class="fill ${s.cls}" style="width:${g.pct||0}%"></div></div></div>
-        <div style="font-size:12px;font-weight:600;color:var(--text2);min-width:32px;text-align:right">${g.pct||0}%</div>
-        <span style="font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600;color:${s.c};background:${s.c}18">${s.label}</span>
-        ${isAdmin()?`<button class="icon-btn" onclick="editGoal('${g.id}')">✏️</button>`:""}
-      </div>`;}).join("") : empty("No goals yet — add one below")}
-    ${isAdmin()?`<button class="btn primary" style="margin-top:12px" onclick="openGoalModal()">+ Add goal</button>`:""}
-  </div>`);
+  ${myTracks.map(track => {
+    const t = DEFAULT_TRAINING[track]; if(!t) return "";
+    const lessons = t.lessons||[];
+    const doneCount = lessons.filter((_,i)=>progress[`${track}:${i}`]).length;
+    const pct = lessons.length ? Math.round(doneCount/lessons.length*100) : 0;
+    return `<div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-weight:600;font-size:14px">${track}</div>
+        <span style="font-size:12px;color:var(--text2)">${doneCount}/${lessons.length} · ${pct}%</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px">${t.description}</div>
+      <div class="track" style="margin-bottom:14px"><div class="fill ${pct===100?"g":pct>40?"a":"r"}" style="width:${pct}%"></div></div>
+      ${lessons.map((l,i)=>{
+        const key=`${track}:${i}`;
+        const done=progress[key];
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)">
+          <input type="checkbox" ${done?"checked":""} style="width:15px;height:15px;accent-color:var(--text);flex-shrink:0"
+            onchange="markLesson('${track}',${i},this.checked)">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:${done?"400":"500"};${done?"text-decoration:line-through;color:var(--text3)":""}">${l.title}</div>
+            <div style="font-size:11px;color:var(--text2)">${l.type==="video"?"🎬 Video":"📄 Documento"} · ${l.duration}</div>
+          </div>
+          ${l.url?`<a href="${l.url}" target="_blank" class="btn" style="font-size:11px;white-space:nowrap">Abrir →</a>`:""}
+        </div>`;
+      }).join("")}
+    </div>`;
+  }).join("")}`);
 }
 
-window.openGoalModal = function(id=null) {
+window.openAssignTrackModal = function(preTrack="", prePerson="") {
+  const allTracks = Object.keys(DEFAULT_TRAINING);
+  const members   = Object.values(TEAM_PROFILES);
   const modal = document.createElement("div");
-  modal.className = "modal-overlay"; modal.id = "goal-modal";
+  modal.className = "modal-overlay"; modal.id = "assign-modal";
   modal.innerHTML = `<div class="modal" onclick="event.stopPropagation()">
-    <h3>New goal</h3>
-    <div class="modal-row"><label>Goal name</label><input type="text" id="gm-name" placeholder="e.g. Reach $50k MRR"/></div>
-    <div class="modal-row"><label>Category</label><select id="gm-cat"><option>Revenue</option><option>Sales</option><option>Content</option><option>Team</option><option>Support</option><option>Other</option></select></div>
-    <div class="modal-row"><label>Owner</label><select id="gm-owner">${Object.values(TEAM_PROFILES).map(p=>`<option>${p.name}</option>`).join("")}</select></div>
-    <div class="modal-row"><label>Progress %</label><input type="number" id="gm-pct" min="0" max="100" value="0"/></div>
-    <div class="modal-row"><label>Status</label><select id="gm-status"><option value="track">On track</option><option value="risk">At risk</option><option value="behind">Behind</option></select></div>
+    <h3>Assign training track</h3>
+    <div class="modal-row">
+      <label>Person</label>
+      <select id="at-person">
+        <option value="">— Select person —</option>
+        ${members.map(m=>`<option value="${m.name}" ${m.name===prePerson?"selected":""}>${m.name} — ${m.role}</option>`).join("")}
+      </select>
+    </div>
+    <div class="modal-row">
+      <label>Track</label>
+      <select id="at-track">
+        <option value="">— Select track —</option>
+        ${allTracks.map(t=>`<option value="${t}" ${t===preTrack?"selected":""}>${t} (${DEFAULT_TRAINING[t]?.lessons?.length||0} lessons)</option>`).join("")}
+      </select>
+    </div>
     <div class="modal-btns">
-      <button class="btn" onclick="document.getElementById('goal-modal').remove()">Cancel</button>
-      <button class="btn primary" onclick="saveGoal()">Save</button>
+      <button class="btn" onclick="document.getElementById('assign-modal').remove()">Cancel</button>
+      <button class="btn primary" onclick="assignTrack()">Assign</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
 };
 
-window.saveGoal = async function() {
-  const name = document.getElementById("gm-name").value.trim(); if(!name) return;
-  await addDoc(collection(db,"goals"),{
-    name, cat:document.getElementById("gm-cat").value,
-    owner:document.getElementById("gm-owner").value,
-    pct:parseInt(document.getElementById("gm-pct").value)||0,
-    status:document.getElementById("gm-status").value,
-    createdAt:serverTimestamp(),
+window.assignTrack = async function() {
+  const personName = document.getElementById("at-person").value;
+  const track      = document.getElementById("at-track").value;
+  if (!personName || !track) { toast("Select both a person and a track"); return; }
+  // Check if already assigned
+  const existing = await getDocs(query(
+    collection(db,"training_assignments"),
+    where("personName","==",personName),
+    where("track","==",track)
+  ));
+  if (!existing.empty) { toast("Already assigned!"); return; }
+  await addDoc(collection(db,"training_assignments"),{
+    personName, track,
+    assignedBy: currentProfile.name,
+    assignedAt: serverTimestamp(),
   });
-  document.getElementById("goal-modal")?.remove();
-  toast("Goal added ✓"); renderGoals();
+  document.getElementById("assign-modal")?.remove();
+  toast(`"${track}" assigned to ${personName} ✓`);
+  renderAdminTraining();
 };
 
-// ══════════════════════════════════════════════
-// FINANCIALS (Jaz + Sophia only)
-// ══════════════════════════════════════════════
-async function renderFinancials() {
-  if (!isFinance()) { setMain(`<div class="page-title">Financials</div><p style="color:var(--text2)">Access restricted.</p>`); return; }
-  const snap = await getDocs(query(collection(db,"financials"), orderBy("date","desc")));
-  const items = snap.docs.map(d=>({id:d.id,...d.data()}));
-  const revenue  = items.filter(i=>i.type==="revenue").reduce((s,i)=>s+(i.amount||0),0);
-  const expenses = items.filter(i=>i.type==="expense").reduce((s,i)=>s+(i.amount||0),0);
-  const payroll  = items.filter(i=>i.type==="payroll").reduce((s,i)=>s+(i.amount||0),0);
-  const net = revenue - expenses - payroll;
-  setMain(`
-  <div class="page-title">Financials</div>
-  <div class="metrics">
-    <div class="metric"><div class="ml">Revenue</div><div class="mv" style="color:var(--green)">$${revenue.toLocaleString()}</div></div>
-    <div class="metric"><div class="ml">Payroll</div><div class="mv" style="color:var(--amber)">$${payroll.toLocaleString()}</div></div>
-    <div class="metric"><div class="ml">Expenses</div><div class="mv" style="color:var(--red)">$${expenses.toLocaleString()}</div></div>
-    <div class="metric"><div class="ml">Net</div><div class="mv" style="color:${net>=0?"var(--green)":"var(--red)"}">$${net.toLocaleString()}</div></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><div class="card-title">All entries</div>
-      <button class="btn primary" onclick="openFinancialModal()">+ Add entry</button></div>
-    ${items.length ? items.map(i=>`
-      <div class="pay-row">
-        <span style="font-size:18px">${i.type==="revenue"?"💚":i.type==="payroll"?"💛":"🔴"}</span>
-        <div style="flex:1"><div style="font-size:13px;font-weight:500">${i.label||i.type}</div>
-          <div style="font-size:11px;color:var(--text2)">${i.type} · ${fmtDate(i.date)} ${i.note?`· ${i.note}`:""}</div></div>
-        <span style="font-size:14px;font-weight:600;color:${i.type==="revenue"?"var(--green)":"var(--red)"}">${i.type==="revenue"?"+":"-"}$${(i.amount||0).toLocaleString()}</span>
-        ${isAdmin()?`<button class="icon-btn" onclick="deleteFinancial('${i.id}')">🗑</button>`:""}
-      </div>`).join("") : empty("No entries yet — add revenue, payroll, and expenses")}
-  </div>`);
-}
+window.unassignTrack = async function(personName, track) {
+  if (!confirm(`Remove "${track}" from ${personName}?`)) return;
+  const snap = await getDocs(query(
+    collection(db,"training_assignments"),
+    where("personName","==",personName),
+    where("track","==",track)
+  ));
+  for (const d of snap.docs) await deleteDoc(d.ref);
+  toast(`Removed ✓`); renderAdminTraining();
+};
 
-window.openFinancialModal = function() {
+window.openTrackDetail = function(track) {
+  const t = DEFAULT_TRAINING[track]; if(!t) return;
   const modal = document.createElement("div");
-  modal.className = "modal-overlay"; modal.id = "fin-modal";
-  modal.innerHTML = `<div class="modal" onclick="event.stopPropagation()">
-    <h3>Add financial entry</h3>
-    <div class="modal-row"><label>Type</label><select id="fn-type"><option value="revenue">Revenue</option><option value="payroll">Payroll</option><option value="expense">Expense</option></select></div>
-    <div class="modal-row"><label>Label</label><input type="text" id="fn-label" placeholder="e.g. High-ticket sales, Ale salary, Software tool"/></div>
-    <div class="modal-row"><label>Amount ($)</label><input type="number" id="fn-amount" min="0" placeholder="0"/></div>
-    <div class="modal-row"><label>Date</label><input type="date" id="fn-date"/></div>
-    <div class="modal-row"><label>Note (optional)</label><input type="text" id="fn-note" placeholder="Any context..."/></div>
-    <div class="modal-btns">
-      <button class="btn" onclick="document.getElementById('fin-modal').remove()">Cancel</button>
-      <button class="btn primary" onclick="saveFinancial()">Save</button>
+  modal.className = "modal-overlay"; modal.id = "track-modal";
+  modal.innerHTML = `<div class="modal" style="width:560px;max-height:85vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <h3>${track}</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">${t.description}</p>
+    ${t.lessons.map((l,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border)">
+        <span style="font-size:16px">${l.type==="video"?"🎬":"📄"}</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:500">${l.title}</div>
+          <div style="font-size:11px;color:var(--text2)">${l.duration}</div>
+        </div>
+        <input type="text" value="${l.url}" placeholder="URL del recurso"
+          onchange="DEFAULT_TRAINING['${track}'].lessons[${i}].url=this.value"
+          style="width:180px;font-size:11px;padding:4px 8px;border-radius:5px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text)"/>
+        <button onclick="deleteLesson('${track}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px">🗑</button>
+      </div>`).join("")}
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="btn danger" onclick="deleteTrack('${track}')">Delete track</button>
+      <button class="btn" onclick="document.getElementById('track-modal').remove()">Close</button>
+      <button class="btn primary" onclick="toast('URLs saved ✓');document.getElementById('track-modal').remove()">Save</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
 };
 
-window.saveFinancial = async function() {
-  const amount = parseFloat(document.getElementById("fn-amount").value); if(!amount) return;
-  await addDoc(collection(db,"financials"),{
-    type:   document.getElementById("fn-type").value,
-    label:  document.getElementById("fn-label").value.trim(),
-    amount, date: document.getElementById("fn-date").value,
-    note:   document.getElementById("fn-note").value.trim(),
-    createdAt: serverTimestamp(), createdBy: currentProfile.name,
-  });
-  document.getElementById("fin-modal")?.remove();
-  toast("Entry saved ✓"); renderFinancials();
+window.deleteLesson = function(track, idx) {
+  DEFAULT_TRAINING[track].lessons.splice(idx,1);
+  document.getElementById("track-modal")?.remove();
+  toast("Lesson removed"); openTrackDetail(track);
 };
 
-window.deleteFinancial = async function(id) {
-  if (!confirm("Delete this entry?")) return;
-  await deleteDoc(doc(db,"financials",id));
-  toast("Deleted"); renderFinancials();
+window.deleteTrack = async function(track) {
+  if (!confirm(`Delete entire track "${track}"? This cannot be undone.`)) return;
+  delete DEFAULT_TRAINING[track];
+  // Remove all assignments for this track
+  const snap = await getDocs(query(collection(db,"training_assignments"), where("track","==",track)));
+  for (const d of snap.docs) await deleteDoc(d.ref);
+  document.getElementById("track-modal")?.remove();
+  toast("Track deleted"); renderAdminTraining();
 };
 
-// ══════════════════════════════════════════════
-// ANALYTICS
-// ══════════════════════════════════════════════
-async function renderAnalytics() {
-  const snap = await getDocs(collection(db,"tasks"));
-  const tasks = snap.docs.map(d=>({id:d.id,...d.data()}));
+window.markLesson = async function(track, idx, done) {
+  const key = `${track}:${idx}`;
+  const ref  = doc(db,"training_progress",`${currentUser.uid}_${key.replace(/[^a-z0-9]/gi,"_")}`);
+  await setDoc(ref,{uid:currentUser.uid, name:currentProfile.name, track, lessonIndex:idx, lessonKey:key, done, updatedAt:serverTimestamp()});
+  toast(done?"Lección completada ✓":"Marcada como pendiente");
+};
+
+window.renderTrainingProgress = async function() {
+  const progSnap = await getDocs(collection(db,"training_progress"));
+  const asnSnap  = await getDocs(collection(db,"training_assignments"));
+  const progress  = progSnap.docs.map(d=>d.data());
+  const assignments = asnSnap.docs.map(d=>d.data());
   const members = Object.values(TEAM_PROFILES);
-  const today = new Date().toISOString().split("T")[0];
 
   setMain(`
-  <div class="page-title">Analytics</div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
+    <button class="btn" onclick="renderTrainingHub()">← Back</button>
+    <div class="page-title" style="margin:0">📊 Team training progress</div>
+  </div>
+  <div class="card">
+    ${members.map(m=>{
+      const myTracks = assignments.filter(a=>a.personName===m.name).map(a=>a.track);
+      const total    = myTracks.reduce((s,t)=>(DEFAULT_TRAINING[t]?.lessons?.length||0)+s,0);
+      const done     = progress.filter(p=>p.name===m.name&&p.done).length;
+      const pct      = total ? Math.round(done/total*100) : 0;
+      return `<div style="padding:12px 0;border-bottom:0.5px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <div class="avatar" style="width:30px;height:30px;font-size:11px;background:${m.color};color:${m.tc}">${m.init}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500">${m.name} <span style="font-size:11px;color:var(--text2);font-weight:400">${m.role}</span></div>
+            <div style="font-size:11px;color:var(--text2)">${myTracks.join(" · ")||"No tracks assigned"}</div>
+          </div>
+          <span style="font-size:14px;font-weight:600;color:${pct===100?"var(--green)":pct>40?"var(--amber)":"var(--red)"}">${pct}%</span>
+          <span style="font-size:11px;color:var(--text2);min-width:40px;text-align:right">${done}/${total}</span>
+        </div>
+        <div class="track"><div class="fill ${pct===100?"g":pct>40?"a":"r"}" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join("")}
+  </div>`);
+};
+
+window.openAddLessonModal = function() {
+  const allTracks = Object.keys(DEFAULT_TRAINING);
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay"; modal.id = "add-lesson-modal";
+  modal.innerHTML = `<div class="modal" onclick="event.stopPropagation()">
+    <h3>Add lesson</h3>
+    <div class="modal-row"><label>Track</label>
+      <select id="al-track">
+        ${allTracks.map(t=>`<option>${t}</option>`).join("")}
+        <option value="__new__">+ Create new track</option>
+      </select>
+    </div>
+    <div id="al-newtrack-row" style="display:none" class="modal-row"><label>New track name</label><input type="text" id="al-newtrack" placeholder="e.g. Webinar Training"/></div>
+    <div class="modal-row"><label>Lesson title</label><input type="text" id="al-title" placeholder="e.g. Cómo hacer el cierre"/></div>
+    <div class="modal-row"><label>Type</label>
+      <select id="al-type"><option value="video">🎬 Video</option><option value="doc">📄 Documento / Playbook</option></select></div>
+    <div class="modal-row"><label>Duration</label><input type="text" id="al-dur" placeholder="10 min"/></div>
+    <div class="modal-row"><label>URL (optional)</label><input type="text" id="al-url" placeholder="https://..."/></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('add-lesson-modal').remove()">Cancel</button>
+      <button class="btn primary" onclick="addLesson()">Add</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.getElementById("al-track").addEventListener("change", function() {
+    document.getElementById("al-newtrack-row").style.display = this.value==="__new__"?"block":"none";
+  });
+};
+
+window.addLesson = function() {
+  let track = document.getElementById("al-track").value;
+  if (track==="__new__") {
+    track = document.getElementById("al-newtrack").value.trim();
+    if (!track) { toast("Enter a track name"); return; }
+    if (!DEFAULT_TRAINING[track]) DEFAULT_TRAINING[track]={description:"",lessons:[]};
+  }
+  const title = document.getElementById("al-title").value.trim(); if(!title) return;
+  DEFAULT_TRAINING[track].lessons.push({
+    title, type:document.getElementById("al-type").value,
+    duration:document.getElementById("al-dur").value||"",
+    url:document.getElementById("al-url").value||"",
+  });
+  document.getElementById("add-lesson-modal")?.remove();
+  toast("Lesson added ✓"); renderAdminTraining();
+};
+
+// ══════════════════════════════════════════════
+// NELLY CALL TRACKER
+// ══════════════════════════════════════════════
+async function renderCallTracker() {
+  const isAdm = isAdmin();
+  const snap = await getDocs(query(collection(db,"call_logs"), orderBy("date","desc")));
+  const logs = snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // Stats
+  const thisWeek = logs.filter(l=>{
+    const d = new Date(l.date); const now = new Date();
+    const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate()-7);
+    return d >= weekAgo;
+  });
+  const completed = logs.filter(l=>l.completedProcess).length;
+  const weekGoal = 40;
+
+  setMain(`
+  <div class="page-title">📞 Registro de llamadas</div>
   <div class="metrics">
-    <div class="metric"><div class="ml">Total tasks</div><div class="mv">${tasks.length}</div></div>
-    <div class="metric"><div class="ml">Completed</div><div class="mv" style="color:var(--green)">${tasks.filter(t=>t.done).length}</div></div>
-    <div class="metric"><div class="ml">Open</div><div class="mv" style="color:var(--amber)">${tasks.filter(t=>!t.done).length}</div></div>
-    <div class="metric"><div class="ml">Completion rate</div><div class="mv">${tasks.length?Math.round(tasks.filter(t=>t.done).length/tasks.length*100):0}%</div></div>
+    <div class="metric"><div class="ml">Esta semana</div><div class="mv" style="color:${thisWeek.length>=weekGoal?"var(--green)":"var(--amber)"}">${thisWeek.length}<span style="font-size:14px;color:var(--text2)">/${weekGoal}</span></div><div class="ms">meta semanal</div></div>
+    <div class="metric"><div class="ml">Total llamadas</div><div class="mv">${logs.length}</div></div>
+    <div class="metric"><div class="ml">Proceso completo</div><div class="mv" style="color:var(--green)">${completed}</div></div>
+    <div class="metric"><div class="ml">Tasa de éxito</div><div class="mv">${logs.length?Math.round(completed/logs.length*100):0}%</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Llamadas registradas</div>
+      <button class="btn primary" onclick="openCallModal()">+ Nueva llamada</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;font-size:12px;border-collapse:collapse;min-width:900px">
+        <thead>
+          <tr style="border-bottom:0.5px solid var(--border)">
+            ${["Hecho por","Nombre","Community","Fathom","Fecha","Link Jaz","Cuenta","Banco","Depósito","App","Proceso ✓","ID Cuenta","Plataforma","Notas",""].map(h=>`<th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap">${h}</th>`).join("")}
+          </tr>
+        </thead>
+        <tbody id="calls-tbody">
+          ${logs.map(l=>`
+            <tr style="border-bottom:0.5px solid var(--border)" id="call-${l.id}">
+              <td style="padding:7px 8px;white-space:nowrap">${badge("info",l.doneBy||"Nelly")}</td>
+              <td style="padding:7px 8px;font-weight:500;white-space:nowrap">${l.fullname||""}</td>
+              <td style="padding:7px 8px">${l.communityLink?`<a href="${l.communityLink}" target="_blank" style="color:var(--blue);font-size:11px">Link →</a>`:"-"}</td>
+              <td style="padding:7px 8px">${l.fathomLink?`<a href="${l.fathomLink}" target="_blank" style="color:var(--blue);font-size:11px">Fathom →</a>`:"-"}</td>
+              <td style="padding:7px 8px;white-space:nowrap">${fmtDate(l.date)}</td>
+              ${["usedJazLink","createdAccount","connectedBank","depositedMoney","downloadedApp","completedProcess"].map(k=>`
+                <td style="padding:7px 8px;text-align:center"><input type="checkbox" ${l[k]?"checked":""} style="accent-color:var(--green)" onchange="updateCallField('${l.id}','${k}',this.checked)"></td>`).join("")}
+              <td style="padding:7px 8px;font-size:11px;color:var(--text2)">${l.accountId||"-"}</td>
+              <td style="padding:7px 8px;font-size:11px">${l.platform||"-"}</td>
+              <td style="padding:7px 8px;font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.notes||""}</td>
+              <td style="padding:7px 8px">
+                <button class="icon-btn" onclick="deleteCall('${l.id}')">🗑</button>
+              </td>
+            </tr>`).join("")||`<tr><td colspan="15" style="padding:16px;color:var(--text2);text-align:center">No hay llamadas registradas aún</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  </div>`);
+}
+
+window.openCallModal = function() {
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay"; modal.id = "call-modal";
+  modal.innerHTML = `<div class="modal" style="width:520px" onclick="event.stopPropagation()">
+    <h3>📞 Registrar llamada</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="modal-row"><label>Nombre completo</label><input type="text" id="cl-name" placeholder="Juan Pérez"/></div>
+      <div class="modal-row"><label>Fecha</label><input type="date" id="cl-date" value="${new Date().toISOString().split('T')[0]}"/></div>
+      <div class="modal-row"><label>Community link (Skool)</label><input type="text" id="cl-comm" placeholder="https://skool.com/..."/></div>
+      <div class="modal-row"><label>Fathom link (grabación)</label><input type="text" id="cl-fathom" placeholder="https://fathom.video/..."/></div>
+      <div class="modal-row"><label>ID de cuenta (si aplica)</label><input type="text" id="cl-accid" placeholder="76450291"/></div>
+      <div class="modal-row"><label>Plataforma</label>
+        <select id="cl-platform"><option value="">-</option><option>Fidelity</option><option>Fidelity Roth IRA</option><option>Robinhood</option><option>Webull</option><option>Moomoo</option><option>M1 Finance</option><option>Depósito</option><option>Otro</option></select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">
+      ${[["usedJazLink","Usó link de Jaz"],["createdAccount","Creó cuenta"],["connectedBank","Conectó banco"],["depositedMoney","Depositó dinero"],["downloadedApp","Descargó app"],["completedProcess","Proceso completado ✓"]].map(([k,label])=>`
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;padding:6px;background:var(--bg2);border-radius:6px;cursor:pointer">
+          <input type="checkbox" id="cl-${k}" style="accent-color:var(--green)"> ${label}
+        </label>`).join("")}
+    </div>
+    <div class="modal-row"><label>Notas</label><textarea id="cl-notes" style="min-height:50px" placeholder="Quiere más info, llamar de nuevo, etc."></textarea></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('call-modal').remove()">Cancel</button>
+      <button class="btn primary" onclick="saveCall()">Guardar llamada</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+};
+
+window.saveCall = async function() {
+  const fullname = document.getElementById("cl-name").value.trim(); if(!fullname) return;
+  const data = {
+    fullname,
+    date:            document.getElementById("cl-date").value,
+    communityLink:   document.getElementById("cl-comm").value.trim(),
+    fathomLink:      document.getElementById("cl-fathom").value.trim(),
+    accountId:       document.getElementById("cl-accid").value.trim(),
+    platform:        document.getElementById("cl-platform").value,
+    notes:           document.getElementById("cl-notes").value.trim(),
+    usedJazLink:     document.getElementById("cl-usedJazLink").checked,
+    createdAccount:  document.getElementById("cl-createdAccount").checked,
+    connectedBank:   document.getElementById("cl-connectedBank").checked,
+    depositedMoney:  document.getElementById("cl-depositedMoney").checked,
+    downloadedApp:   document.getElementById("cl-downloadedApp").checked,
+    completedProcess:document.getElementById("cl-completedProcess").checked,
+    doneBy:          currentProfile.name,
+    createdAt:       serverTimestamp(),
+  };
+  await addDoc(collection(db,"call_logs"), data);
+  document.getElementById("call-modal")?.remove();
+  toast("Llamada guardada ✓"); renderCallTracker();
+};
+
+window.updateCallField = async function(id, field, value) {
+  await updateDoc(doc(db,"call_logs",id), {[field]:value, updatedAt:serverTimestamp()});
+};
+
+window.deleteCall = async function(id) {
+  if(!confirm("¿Eliminar esta llamada?")) return;
+  await deleteDoc(doc(db,"call_logs",id));
+  toast("Eliminada"); renderCallTracker();
+};
+
+// ══════════════════════════════════════════════
+// CALENDAR — unified view (tasks + content + events + Google Cal)
+// ══════════════════════════════════════════════
+let calView = "week"; // "week" | "month"
+let calDate = new Date();
+
+async function renderCalendar() {
+  setMain(`
+  <div class="page-title">📅 Calendar</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+    <div style="display:flex;gap:4px">
+      <button class="filter-btn ${calView==="week"?"active":""}" onclick="switchCalView('week',this)">📋 Today & week</button>
+      <button class="filter-btn ${calView==="month"?"active":""}" onclick="switchCalView('month',this)">🗓 Month</button>
+      <button class="filter-btn ${calView==="gcal"?"active":""}" onclick="switchCalView('gcal',this)">📅 Google Cal</button>
+    </div>
+    <div style="flex:1"></div>
+    ${isAdmin()?`<button class="btn primary" onclick="openEventModal()">+ Add event</button>`:""}
+    <a href="https://calendar.google.com" target="_blank" class="btn">Open Google Cal →</a>
+  </div>
+  <div id="cal-main-view">Loading...</div>`);
+  await renderCalView();
+}
+
+window.switchCalView = async function(view, btn) {
+  calView = view;
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  await renderCalView();
+};
+
+async function renderCalView() {
+  if (calView === "week")  await renderWeekView();
+  if (calView === "month") await renderMonthView();
+  if (calView === "gcal")  await renderGCalView();
+}
+
+// ── TODAY & WEEK VIEW ──
+async function renderWeekView() {
+  const today    = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  const [taskSnap, eventSnap, contentSnap] = await Promise.all([
+    getDocs(collection(db,"tasks")),
+    getDocs(collection(db,"events")),
+    getDocs(collection(db,"content")),
+  ]);
+  const allTasks   = taskSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const allEvents  = eventSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const allContent = contentSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const myTasks    = isAdmin() ? allTasks : allTasks.filter(t=>t.assignee===currentProfile.name);
+
+  function getItems(ds) {
+    const out = [];
+    myTasks.filter(t=>t.due===ds).forEach(t=>out.push({
+      type:"task", title:t.text, sub:t.assignee,
+      color:t.done?"#aaa":t.pri==="high"?"#a32d2d":t.pri==="med"?"#854f0b":"#3b6d11",
+      emoji:t.done?"✅":"📌", done:t.done, id:t.id,
+    }));
+    allEvents.filter(e=>e.date===ds).forEach(e=>out.push({
+      type:"event", title:e.title,
+      sub:(e.time||"")+(e.assignee?" · "+e.assignee:""),
+      color:e.color||"#185fa5", emoji:"📅",
+    }));
+    allContent.filter(x=>x.scriptDue===ds).forEach(x=>out.push({type:"content",title:"Script: "+x.title,sub:x.assignee||"",color:"#3b6d11",emoji:"📝"}));
+    allContent.filter(x=>x.uploadDue===ds).forEach(x=>out.push({type:"content",title:"Upload: "+x.title,sub:x.assignee||"",color:"#3b6d11",emoji:"🎬"}));
+    return out;
+  }
+
+  const overdue  = myTasks.filter(t=>!t.done && t.due && t.due < todayStr);
+  const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const days     = [];
+  for (let i=0;i<7;i++){const d=new Date(today);d.setDate(today.getDate()+i);days.push(d);}
+
+  // Build using DOM to avoid ALL quote conflicts
+  const wrap = document.getElementById("cal-main-view");
+  wrap.innerHTML = "";
+
+  // Overdue section
+  if (overdue.length) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.cssText = "border-left:3px solid var(--red);margin-bottom:1rem";
+    card.innerHTML = "<div class='card-head'><div class='card-title' style='color:var(--red)'>🔴 Overdue (" + overdue.length + ")</div></div>";
+    overdue.forEach(t => {
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.style.accentColor = "var(--text)";
+      cb.addEventListener("change", () => toggleTask(t.id, "none"));
+      const info = document.createElement("div");
+      info.style.flex = "1";
+      info.innerHTML = "<div style='font-size:13px;font-weight:500;color:var(--red)'>" + t.text + "</div>" +
+        "<div style='font-size:11px;color:var(--text2)'>" + t.assignee + " · was due " + fmtDate(t.due) + "</div>";
+      const bdg = document.createElement("span");
+      bdg.className = "badge high"; bdg.textContent = "overdue";
+      row.append(cb, info, bdg);
+      card.appendChild(row);
+    });
+    wrap.appendChild(card);
+  }
+
+  // Day sections
+  days.forEach((d, i) => {
+    const ds    = d.toISOString().split("T")[0];
+    const items = getItems(ds);
+    const isToday = i === 0;
+    if (!isToday && !items.length) return;
+
+    const label     = isToday ? "Today" : i===1 ? "Tomorrow" : dayNames[d.getDay()];
+    const dateLabel = d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.cssText = "margin-bottom:10px;" + (isToday ? "border-left:3px solid var(--blue)" : "");
+
+    const head = document.createElement("div");
+    head.className = "card-head";
+    head.style.marginBottom = items.length ? "12px" : "0";
+    const titleDiv = document.createElement("div");
+    titleDiv.innerHTML = "<div style='font-size:14px;font-weight:600'>" + label + "</div><div style='font-size:11px;color:var(--text2)'>" + dateLabel + "</div>";
+    head.appendChild(titleDiv);
+    if (isAdmin()) {
+      const addBtn = document.createElement("button");
+      addBtn.className = "btn";
+      addBtn.style.fontSize = "11px";
+      addBtn.textContent = "+ Add";
+      addBtn.addEventListener("click", () => openEventModal(ds));
+      head.appendChild(addBtn);
+    }
+    card.appendChild(head);
+
+    if (items.length) {
+      items.forEach(item => {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)";
+        const bar = document.createElement("div");
+        bar.style.cssText = "width:3px;min-height:36px;border-radius:2px;background:" + item.color + ";flex-shrink:0";
+        const emoji = document.createElement("span");
+        emoji.style.fontSize = "16px";
+        emoji.textContent = item.emoji;
+        const body = document.createElement("div");
+        body.style.flex = "1";
+        const strike = item.done ? "text-decoration:line-through;color:var(--text3)" : "";
+        body.innerHTML = "<div style='font-size:13px;font-weight:500;" + strike + "'>" + item.title + "</div>" +
+          "<div style='font-size:11px;color:var(--text2)'>" + (item.sub||"") + "</div>";
+        row.append(bar, emoji, body);
+        if (item.type === "task") {
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = item.done;
+          cb.style.accentColor = "var(--text)";
+          cb.addEventListener("change", () => toggleTask(item.id, "none"));
+          row.appendChild(cb);
+        }
+        card.appendChild(row);
+      });
+    } else {
+      const empty = document.createElement("div");
+      empty.style.cssText = "font-size:12px;color:var(--text3);padding:4px 0";
+      empty.textContent = "No items scheduled";
+      card.appendChild(empty);
+    }
+    wrap.appendChild(card);
+  });
+
+  // Quick add task
+  const addCard = document.createElement("div");
+  addCard.className = "card";
+  addCard.style.marginTop = "0.5rem";
+  addCard.innerHTML = "<div class='card-head'><div class='card-title'>+ Quick add task</div></div>" +
+    "<div class='add-row'>" +
+    "<input type='text' id='quick-task-text' placeholder='Add a task for yourself...' />" +
+    "<input type='date' id='quick-task-due' value='" + todayStr + "' style='font-size:12px;padding:7px 10px;border-radius:6px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text)'/>" +
+    "<select id='quick-task-pri' style='font-size:12px;padding:7px 10px;border-radius:6px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text)'>" +
+    "<option value='high'>🔴 High</option><option value='med' selected>🟡 Med</option><option value='low'>🟢 Low</option></select>" +
+    "<button class='btn primary' onclick='quickAddCalTask()'>Add</button></div>";
+  wrap.appendChild(addCard);
+}
+
+
+window.quickAddCalTask = async function() {
+  const text = document.getElementById("quick-task-text")?.value.trim(); if(!text) return;
+  const due  = document.getElementById("quick-task-due")?.value||"";
+  const pri  = document.getElementById("quick-task-pri")?.value||"med";
+  await addDoc(collection(db,"tasks"),{
+    text, assignee:currentProfile.name, pri, due, done:false,
+    recur:"none", notes:"", subtasks:[], completedDates:[],
+    createdAt:serverTimestamp(), createdBy:currentProfile.name,
+  });
+  toast("Task added ✓"); renderWeekView();
+};
+
+// ── MONTH VIEW ──
+async function renderMonthView() {
+  const y = calDate.getFullYear(), m = calDate.getMonth();
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const [taskSnap, eventSnap, contentSnap] = await Promise.all([
+    getDocs(collection(db,"tasks")),
+    getDocs(collection(db,"events")),
+    getDocs(collection(db,"content")),
+  ]);
+  const allTasks   = taskSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const allEvents  = eventSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const allContent = contentSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const myTasks    = isAdmin() ? allTasks : allTasks.filter(t=>t.assignee===currentProfile.name);
+  const today      = new Date();
+
+  // Build dot map
+  const dotMap = {};
+  const addDot = (ds,color) => { if(!dotMap[ds]) dotMap[ds]=[]; dotMap[ds].push(color); };
+  myTasks.filter(t=>t.due).forEach(t=>addDot(t.due, t.done?"#aaa":t.pri==="high"?"#a32d2d":"#3b6d11"));
+  allEvents.forEach(e=>addDot(e.date, e.color||"#185fa5"));
+  allContent.filter(c=>c.scriptDue).forEach(c=>addDot(c.scriptDue,"#3b6d11"));
+  allContent.filter(c=>c.uploadDue).forEach(c=>addDot(c.uploadDue,"#3b6d11"));
+
+  const first = new Date(y,m,1).getDay();
+  const days  = new Date(y,m+1,0).getDate();
+  const dayNames = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+
+  // Build grid HTML without nested template literals
+  let gridHTML = "";
+  dayNames.forEach(dn => {
+    gridHTML += "<div style='text-align:center;font-size:10px;color:var(--text2);padding:4px;font-weight:600'>" + dn + "</div>";
+  });
+
+  let dayGridHTML = "";
+  for (let i=0; i<first; i++) dayGridHTML += "<div></div>";
+  for (let day=1; day<=days; day++) {
+    const ds = y+"-"+String(m+1).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+    const isToday = today.getFullYear()===y && today.getMonth()===m && today.getDate()===day;
+    const dots = (dotMap[ds]||[]).slice(0,3);
+    let dotsHTML = "";
+    dots.forEach(color => { dotsHTML += "<div style='width:5px;height:5px;border-radius:50%;background:"+color+"'></div>"; });
+    const bg    = isToday ? "var(--text)" : "transparent";
+    const color = isToday ? "var(--bg)"   : "var(--text)";
+    const fw    = isToday ? "600" : "400";
+        dayGridHTML += '<div data-ds="' + ds + '" class="month-day-btn" style="text-align:center;padding:6px 2px;border-radius:7px;cursor:pointer;background:' + bg + ';color:' + color + ';font-weight:' + fw + '">' +
+      "<div style='font-size:12px;font-weight:"+fw+"'>"+day+"</div>" +
+      "<div style='display:flex;gap:2px;justify-content:center;margin-top:2px'>"+dotsHTML+"</div></div>";
+  }
+
+  document.getElementById("cal-main-view").innerHTML =
+    "<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:12px'>" +
+      "<div style='font-size:15px;font-weight:600'>" + months[m] + " " + y + "</div>" +
+      "<div style='display:flex;gap:6px'>" +
+        "<button class='btn' onclick='calDate.setMonth(calDate.getMonth()-1);renderMonthView()' style='padding:4px 12px'>‹</button>" +
+        "<button class='btn' onclick='calDate.setMonth(calDate.getMonth()+1);renderMonthView()' style='padding:4px 12px'>›</button>" +
+      "</div>" +
+    "</div>" +
+    "<div style='display:grid;grid-template-columns:1fr 1fr;gap:1rem'>" +
+      "<div>" +
+        "<div style='display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px'>" + gridHTML + "</div>" +
+        "<div style='display:grid;grid-template-columns:repeat(7,1fr);gap:3px'>" + dayGridHTML + "</div>" +
+      "</div>" +
+      "<div id='month-day-detail' style='font-size:13px;color:var(--text2);padding:1rem 0'>Click a day to see details</div>" +
+    "</div>";
+
+  // Wire clicks on day cells
+  document.querySelectorAll('.month-day-btn').forEach(el => {
+    el.addEventListener('click', () => selectMonthDay(el.dataset.ds, allTasks, allEvents, allContent));
+  });
+  // Pre-select today
+  selectMonthDay(today.toISOString().split("T")[0], allTasks, allEvents, allContent);
+}
+
+
+async function renderGCalView() {
+  let embedUrl = "";
+  try {
+    const snap = await getDoc(doc(db,"settings","calendar"));
+    if (snap.exists()) embedUrl = snap.data().embedUrl||"";
+  } catch(e){}
+
+  document.getElementById("cal-main-view").innerHTML = embedUrl
+    ? `<div class="card" style="padding:0;overflow:hidden;border-radius:var(--rl)">
+        <iframe src="${embedUrl}" style="width:100%;height:600px;border:none" frameborder="0" scrolling="no"></iframe>
+       </div>`
+    : `<div class="card" style="text-align:center;padding:3rem">
+        <div style="font-size:32px;margin-bottom:12px">📅</div>
+        <div style="font-size:15px;font-weight:500;margin-bottom:6px">Google Calendar not connected</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">Add your embed URL in Settings to see your calendar here</div>
+        ${isAdmin()?`<button class="btn primary" onclick="go('settings')">Go to Settings →</button>`:""}
+       </div>`;
+}
+
+// ══════════════════════════════════════════════
+// GHL INTEGRATION
+// ══════════════════════════════════════════════
+const GHL_API_KEY = "pit-85851399-87f4-476b-a88a-28f2e755b0d5";
+const GHL_BASE    = "https://services.leadconnectorhq.com";
+
+async function ghlFetch(path) {
+  try {
+    const res = await fetch(`${GHL_BASE}${path}`, {
+      headers: { "Authorization": `Bearer ${GHL_API_KEY}`, "Version": "2021-07-28", "Accept": "application/json" }
+    });
+    if (!res.ok) throw new Error(`GHL ${res.status}`);
+    return await res.json();
+  } catch(e) {
+    console.warn("GHL fetch error:", e);
+    return null;
+  }
+}
+
+async function renderSalesBoard() {
+  setMain(`
+  <div class="page-title">📈 Sales & GHL</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem">
+    <div style="flex:1;font-size:13px;color:var(--text2)">Live data from Go High Level</div>
+    <a href="https://app.gohighlevel.com" target="_blank" class="btn">Open GHL →</a>
+    <button class="btn" onclick="renderSalesBoard()">↻ Refresh</button>
+  </div>
+  <div class="metrics" id="ghl-metrics">
+    <div class="metric"><div class="ml">Pipeline</div><div class="mv">—</div><div class="ms">loading...</div></div>
+    <div class="metric"><div class="ml">Contacts</div><div class="mv">—</div></div>
+    <div class="metric"><div class="ml">Opportunities</div><div class="mv">—</div></div>
+    <div class="metric"><div class="ml">Won this month</div><div class="mv">—</div></div>
   </div>
   <div class="two-col">
     <div class="card">
-      <div class="card-head"><div class="card-title">Productivity per member</div></div>
+      <div class="card-head"><div class="card-title">Pipeline stages</div></div>
+      <div id="ghl-pipeline"><div style="font-size:13px;color:var(--text2);padding:8px 0">Loading from GHL...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Recent contacts</div></div>
+      <div id="ghl-contacts"><div style="font-size:13px;color:var(--text2);padding:8px 0">Loading from GHL...</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">Recent activity</div></div>
+    <div id="ghl-activity"><div style="font-size:13px;color:var(--text2);padding:8px 0">Loading from GHL...</div></div>
+  </div>`);
+
+  // Load GHL data in parallel
+  const [pipelines, contacts, opps] = await Promise.all([
+    ghlFetch("/opportunities/pipelines"),
+    ghlFetch("/contacts/?limit=10&sortBy=date_added&sortOrder=desc"),
+    ghlFetch("/opportunities/search/?limit=20&sortField=id&sortDirection=desc"),
+  ]);
+
+  // Metrics
+  const totalOpps   = opps?.opportunities?.length || 0;
+  const wonOpps     = opps?.opportunities?.filter(o=>o.status==="won")?.length || 0;
+  const totalVal    = opps?.opportunities?.reduce((s,o)=>s+(o.monetaryValue||0),0)||0;
+  const totalContacts = contacts?.total || contacts?.contacts?.length || 0;
+  document.getElementById("ghl-metrics").innerHTML = `
+    <div class="metric"><div class="ml">Pipeline value</div><div class="mv" style="font-size:18px">$${(totalVal/1000).toFixed(1)}k</div></div>
+    <div class="metric"><div class="ml">Total contacts</div><div class="mv">${totalContacts}</div></div>
+    <div class="metric"><div class="ml">Open deals</div><div class="mv">${totalOpps}</div></div>
+    <div class="metric"><div class="ml">Won deals</div><div class="mv" style="color:var(--green)">${wonOpps}</div></div>`;
+
+  // Pipeline stages
+  const pipelineEl = document.getElementById("ghl-pipeline");
+  if (pipelines?.pipelines?.length) {
+    const stages = pipelines.pipelines[0]?.stages || [];
+    pipelineEl.innerHTML = stages.map(s => {
+      const stageOpps = opps?.opportunities?.filter(o=>o.pipelineStageId===s.id)||[];
+      const stageVal  = stageOpps.reduce((sum,o)=>sum+(o.monetaryValue||0),0);
+      const pct = totalVal ? Math.round(stageVal/totalVal*100) : 0;
+      return `<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:13px;font-weight:500">${s.name}</span>
+          <span style="font-size:12px;color:var(--text2)">${stageOpps.length} deals · $${(stageVal/1000).toFixed(1)}k</span>
+        </div>
+        <div class="track"><div class="fill g" style="width:${pct}%"></div></div>
+      </div>`;}).join("");
+  } else {
+    pipelineEl.innerHTML = `<div style="font-size:13px;color:var(--text2);padding:8px 0">
+      ${pipelines ? "No pipelines found" : "⚠️ Could not connect to GHL. Check API key or CORS settings."}
+      <br><a href="https://app.gohighlevel.com" target="_blank" style="color:var(--blue)">Open GHL directly →</a>
+    </div>`;
+  }
+
+  // Recent contacts
+  const contactsEl = document.getElementById("ghl-contacts");
+  const ctList = contacts?.contacts || [];
+  contactsEl.innerHTML = ctList.length ? ctList.slice(0,8).map(c=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0">
+        ${(c.firstName||"?")[0]}${(c.lastName||"")[0]||""}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.firstName||""} ${c.lastName||""}</div>
+        <div style="font-size:11px;color:var(--text2)">${c.email||c.phone||""}</div>
+      </div>
+      <span style="font-size:10px;color:var(--text2)">${c.dateAdded?new Date(c.dateAdded).toLocaleDateString():""}</span>
+    </div>`).join("")
+    : `<div style="font-size:13px;color:var(--text2);padding:8px 0">No contacts found or GHL not connected.</div>`;
+
+  // Recent opportunities as activity
+  const actEl = document.getElementById("ghl-activity");
+  const oppList = opps?.opportunities || [];
+  actEl.innerHTML = oppList.length ? oppList.slice(0,8).map(o=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
+      <span style="font-size:16px">${o.status==="won"?"🏆":o.status==="lost"?"❌":"📋"}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.name||o.contact?.name||"Opportunity"}</div>
+        <div style="font-size:11px;color:var(--text2)">${o.pipelineStageName||""} · ${o.assignedTo||""}</div>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:${o.status==="won"?"var(--green)":"var(--text2)"}">${o.monetaryValue?`$${o.monetaryValue.toLocaleString()}`:""}</span>
+      ${badge(o.status==="won"?"approved":o.status==="lost"?"denied":"info", o.status||"open")}
+    </div>`).join("")
+    : `<div style="font-size:13px;color:var(--text2);padding:8px 0">No opportunities found.</div>`;
+}
+
+// ══════════════════════════════════════════════
+// SOCIAL MEDIA ANALYTICS
+// ══════════════════════════════════════════════
+async function renderAnalytics() {
+  const [taskSnap, contentSnap, socialSnap] = await Promise.all([
+    getDocs(collection(db,"tasks")),
+    getDocs(collection(db,"content")),
+    getDocs(query(collection(db,"social_stats"), orderBy("date","desc"))),
+  ]);
+  const tasks   = taskSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const content = contentSnap.docs.map(d=>d.data());
+  const social  = socialSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const members = Object.values(TEAM_PROFILES);
+
+  // Social totals
+  const latestIG  = social.filter(s=>s.platform==="Instagram")[0];
+  const latestTT  = social.filter(s=>s.platform==="TikTok")[0];
+  const latestYT  = social.filter(s=>s.platform==="YouTube")[0];
+
+  // Load GHL data too
+  const [ghlOpps, ghlContacts] = await Promise.all([
+    ghlFetch("/opportunities/search/?limit=20"),
+    ghlFetch("/contacts/?limit=5&sortBy=date_added&sortOrder=desc"),
+  ]);
+  const totalOpps = ghlOpps?.opportunities?.length||0;
+  const wonOpps   = ghlOpps?.opportunities?.filter(o=>o.status==="won")?.length||0;
+  const totalVal  = ghlOpps?.opportunities?.reduce((s,o)=>s+(o.monetaryValue||0),0)||0;
+  const ctList    = ghlContacts?.contacts||[];
+
+  setMain(`
+  <div class="page-title">📊 Analytics</div>
+
+  <!-- GHL SUMMARY -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:13px;font-weight:600">GHL / Sales</div>
+    <a href="https://app.gohighlevel.com" target="_blank" class="btn" style="font-size:11px">Open GHL →</a>
+  </div>
+  <div class="metrics" style="margin-bottom:1.25rem">
+    <div class="metric"><div class="ml">Pipeline value</div><div class="mv" style="font-size:18px;color:var(--green)">$${(totalVal/1000).toFixed(1)}k</div></div>
+    <div class="metric"><div class="ml">Open deals</div><div class="mv">${totalOpps}</div></div>
+    <div class="metric"><div class="ml">Won deals</div><div class="mv" style="color:var(--green)">${wonOpps}</div></div>
+    <div class="metric"><div class="ml">Recent contacts</div><div class="mv">${ctList.length}</div><div class="ms">${ctList.slice(0,2).map(c=>c.firstName||"").join(", ")||"—"}</div></div>
+  </div>
+
+  <!-- SOCIAL MEDIA -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:13px;font-weight:600;color:var(--text)">Social media</div>
+    ${isAdmin()?`<button class="btn primary" onclick="openSocialModal()">+ Log stats</button>`:""}
+  </div>
+  <div class="metrics" style="margin-bottom:1.25rem">
+    <div class="metric">
+      <div class="ml">📸 Instagram</div>
+      <div class="mv" style="font-size:18px">${latestIG?.followers?.toLocaleString()||"—"}</div>
+      <div class="ms">${latestIG?`+${((latestIG.followers-(social.filter(s=>s.platform==="Instagram")[1]?.followers||latestIG.followers))||0).toLocaleString()} followers · ${latestIG.date}`:"No data yet"}</div>
+    </div>
+    <div class="metric">
+      <div class="ml">🎵 TikTok</div>
+      <div class="mv" style="font-size:18px">${latestTT?.followers?.toLocaleString()||"—"}</div>
+      <div class="ms">${latestTT?`${latestTT.date}`:"No data yet"}</div>
+    </div>
+    <div class="metric">
+      <div class="ml">▶️ YouTube</div>
+      <div class="mv" style="font-size:18px">${latestYT?.followers?.toLocaleString()||"—"}</div>
+      <div class="ms">${latestYT?`${latestYT.views?.toLocaleString()||0} views · ${latestYT.date}`:"No data yet"}</div>
+    </div>
+    <div class="metric">
+      <div class="ml">Content posted</div>
+      <div class="mv">${content.filter(c=>c.stage==="Done"||c.uploaded).length}</div>
+      <div class="ms">total published</div>
+    </div>
+  </div>
+
+  ${social.length ? `
+  <div class="card" style="margin-bottom:1rem">
+    <div class="card-head"><div class="card-title">Social stats history</div></div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;font-size:12px;border-collapse:collapse;min-width:600px">
+        <thead><tr style="border-bottom:0.5px solid var(--border)">
+          ${["Date","Platform","Followers","Reach","Impressions","Engagement","Likes","Comments","Shares","Revenue","Notes"].map(h=>`<th style="text-align:left;padding:5px 8px;font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap">${h}</th>`).join("")}
+        </tr></thead>
+        <tbody>
+          ${social.slice(0,20).map(s=>`<tr style="border-bottom:0.5px solid var(--border)">
+            <td style="padding:6px 8px;white-space:nowrap">${fmtDate(s.date)}</td>
+            <td style="padding:6px 8px">${badge(s.platform==="Instagram"?"info":s.platform==="TikTok"?"high":"low",s.platform)}</td>
+            <td style="padding:6px 8px;font-weight:500">${s.followers?.toLocaleString()||"—"}</td>
+            <td style="padding:6px 8px">${s.reach?.toLocaleString()||"—"}</td>
+            <td style="padding:6px 8px">${s.impressions?.toLocaleString()||"—"}</td>
+            <td style="padding:6px 8px">${s.engagement?s.engagement+"%":"—"}</td>
+            <td style="padding:6px 8px">${s.likes?.toLocaleString()||"—"}</td>
+            <td style="padding:6px 8px">${s.comments?.toLocaleString()||"—"}</td>
+            <td style="padding:6px 8px">${s.shares?.toLocaleString()||"—"}</td>
+            <td style="padding:6px 8px;color:var(--green);font-weight:500">${s.revenue?"$"+s.revenue.toLocaleString():""}</td>
+            <td style="padding:6px 8px;color:var(--text2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.notes||""}</td>
+            <td style="padding:6px 8px">${isAdmin()?`<button class="icon-btn" onclick="deleteSocialStat('${s.id}')">🗑</button>`:""}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+  </div>` : `<div class="card" style="margin-bottom:1rem;text-align:center;padding:1.5rem">
+    <div style="font-size:13px;color:var(--text2)">No social stats yet. ${isAdmin()?"Click '+ Log stats' to add your first entry.":""}</div>
+  </div>`}
+
+  <!-- TEAM PRODUCTIVITY -->
+  <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">Team productivity</div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Tasks per person</div></div>
       ${members.map(m=>{
-        const total = tasks.filter(t=>t.assignee===m.name).length;
-        const done  = tasks.filter(t=>t.assignee===m.name&&t.done).length;
-        const open  = total - done;
-        const pct   = total ? Math.round(done/total*100) : 0;
+        const total=tasks.filter(t=>t.assignee===m.name).length;
+        const done=tasks.filter(t=>t.assignee===m.name&&t.done).length;
+        const pct=total?Math.round(done/total*100):0;
         return `<div style="padding:8px 0;border-bottom:0.5px solid var(--border)">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-            <div class="avatar" style="width:24px;height:24px;font-size:9px;background:${m.color};color:${m.tc}">${m.init}</div>
-            <span style="font-size:13px;font-weight:500;flex:1">${m.name}</span>
-            <span style="font-size:11px;color:var(--text2)">${done}/${total} done</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <div class="avatar" style="width:22px;height:22px;font-size:8px;background:${m.color};color:${m.tc}">${m.init}</div>
+            <span style="flex:1;font-size:12px;font-weight:500">${m.name}</span>
+            <span style="font-size:11px;color:var(--text2)">${done}/${total}</span>
             <span style="font-size:11px;font-weight:600;color:${pct>=70?"var(--green)":pct>=40?"var(--amber)":"var(--red)"}">${pct}%</span>
           </div>
           <div class="track"><div class="fill ${pct>=70?"g":pct>=40?"a":"r"}" style="width:${pct}%"></div></div>
         </div>`;}).join("")}
     </div>
     <div class="card">
-      <div class="card-head"><div class="card-title">Tasks by priority</div></div>
-      ${["high","med","low"].map(p=>{
-        const count = tasks.filter(t=>t.pri===p).length;
-        const done  = tasks.filter(t=>t.pri===p&&t.done).length;
-        return `<div class="sales-row">
-          ${badge(p,p)}
-          <span style="flex:1;font-size:13px;margin-left:8px">${count} tasks</span>
-          <span style="font-size:12px;color:var(--text2)">${done} done</span>
+      <div class="card-head"><div class="card-title">Content pipeline</div></div>
+      ${["Bank of Ideas","Idea Approved by Jaz","Create Canva Description","Approved Scripts","Recording","Upload to YouTube","Done"].map(s=>{
+        const n=content.filter(c=>c.stage===s).length;
+        const pct=content.length?Math.round(n/content.length*100):0;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
+          <span style="flex:1;font-size:12px">${s}</span>
+          <div style="width:80px"><div class="track"><div class="fill g" style="width:${pct}%"></div></div></div>
+          <span style="font-size:12px;font-weight:600;color:var(--text2);min-width:20px;text-align:right">${n}</span>
         </div>`;}).join("")}
-      <div style="margin-top:16px">
-        <div class="card-title" style="margin-bottom:10px">Content pipeline</div>
-        <div id="pipeline-stats">Loading...</div>
+    </div>
+  </div>`);
+}
+
+window.openSocialModal = function() {
+  const modal = document.createElement("div");
+  modal.className="modal-overlay"; modal.id="social-modal";
+  modal.innerHTML=`<div class="modal" style="width:520px" onclick="event.stopPropagation()">
+    <h3>📊 Log social stats</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="modal-row"><label>Platform</label>
+        <select id="sm-platform">
+          <option>Instagram</option><option>TikTok</option><option>YouTube</option>
+        </select>
       </div>
+      <div class="modal-row"><label>Date</label><input type="date" id="sm-date" value="${new Date().toISOString().split("T")[0]}"/></div>
+      <div class="modal-row"><label>Followers</label><input type="number" id="sm-followers" placeholder="0"/></div>
+      <div class="modal-row"><label>Reach</label><input type="number" id="sm-reach" placeholder="0"/></div>
+      <div class="modal-row"><label>Impressions</label><input type="number" id="sm-impressions" placeholder="0"/></div>
+      <div class="modal-row"><label>Engagement %</label><input type="number" id="sm-engagement" placeholder="0.0" step="0.1"/></div>
+      <div class="modal-row"><label>Likes</label><input type="number" id="sm-likes" placeholder="0"/></div>
+      <div class="modal-row"><label>Comments</label><input type="number" id="sm-comments" placeholder="0"/></div>
+      <div class="modal-row"><label>Shares/Saves</label><input type="number" id="sm-shares" placeholder="0"/></div>
+      <div class="modal-row"><label>Revenue attributed ($)</label><input type="number" id="sm-revenue" placeholder="0"/></div>
     </div>
-  </div>`);
-
-  // Content stats
-  const csnap = await getDocs(collection(db,"content"));
-  const content = csnap.docs.map(d=>d.data());
-  const pipelineEl = document.getElementById("pipeline-stats");
-  if (pipelineEl) {
-    pipelineEl.innerHTML = CONTENT_STAGES.map(s=>{
-      const n = content.filter(c=>c.stage===s).length;
-      return `<div class="sales-row"><span style="flex:1;font-size:12px">${s}</span>
-        <span style="font-size:12px;font-weight:600;color:var(--text2)">${n}</span></div>`;
-    }).join("");
-  }
-}
-
-// ══════════════════════════════════════════════
-// UPDATES
-// ══════════════════════════════════════════════
-async function renderUpdates() {
-  const snap = await getDocs(query(collection(db,"announcements"), orderBy("createdAt","desc")));
-  const ann  = snap.docs.map(d=>({id:d.id,...d.data()}));
-  setMain(`
-  <div class="page-title">Updates</div>
-  <div class="card">
-    <div class="card-head"><div class="card-title">Team announcements</div></div>
-    <div id="ann-list">
-      ${ann.map(a=>`<div class="announce">
-        <div class="announce-title">${a.text}</div>
-        <div class="announce-meta">Posted by ${a.by} · ${a.createdAt?.toDate?.()?.toLocaleDateString()||"recently"}</div>
-      </div>`).join("")||empty("No updates yet")}
+    <div class="modal-row"><label>Notes</label><textarea id="sm-notes" style="min-height:50px" placeholder="Best post, campaign, anything notable..."></textarea></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('social-modal').remove()">Cancel</button>
+      <button class="btn primary" onclick="saveSocialStats()">Save stats</button>
     </div>
-    ${isAdmin()?`
-    <div class="add-row" style="margin-top:12px">
-      <input type="text" id="ann-text" placeholder="Post an update (payroll info NOT shown here)..."/>
-      <button class="btn primary" onclick="postUpdate()">Post</button>
-    </div>`:""}
-  </div>`);
-}
-
-window.postUpdate = async function() {
-  const inp = document.getElementById("ann-text");
-  if (!inp?.value.trim()) return;
-  await addDoc(collection(db,"announcements"),{text:inp.value.trim(),by:currentProfile.name,createdAt:serverTimestamp()});
-  toast("Posted ✓"); renderUpdates();
+  </div>`;
+  document.body.appendChild(modal);
 };
 
-// ══════════════════════════════════════════════
-// LINKS (per role)
-// ══════════════════════════════════════════════
-async function renderLinks() {
-  // Try to load custom links from Firestore, fall back to defaults
-  let myLinks = links.filter(l => l.roles.includes("all") || l.roles.includes(currentProfile.access));
-  try {
-    const snap = await getDocs(collection(db,"links"));
-    if (snap.size > 0) myLinks = snap.docs.map(d=>d.data()).filter(l=>!l.roles||l.roles.includes("all")||l.roles.includes(currentProfile.access));
-  } catch(e) {}
-  setMain(`
-  <div class="page-title">Quick links</div>
-  <div class="card">
-    <div class="links-grid">
-      ${myLinks.map(l=>`
-        <a class="link-card" href="${l.url}" target="_blank" rel="noopener">
-          <div class="link-icon">${l.icon}</div>
-          <div class="link-name">${l.name}</div>
-          <div class="link-desc">${l.desc}</div>
-        </a>`).join("")}
-    </div>
-  </div>`);
-}
+window.saveSocialStats = async function() {
+  const n = id => { const v=document.getElementById(id)?.value; return v?parseFloat(v):null; };
+  await addDoc(collection(db,"social_stats"),{
+    platform:  document.getElementById("sm-platform").value,
+    date:      document.getElementById("sm-date").value,
+    followers: n("sm-followers"), reach:n("sm-reach"),
+    impressions:n("sm-impressions"), engagement:n("sm-engagement"),
+    likes:n("sm-likes"), comments:n("sm-comments"),
+    shares:n("sm-shares"), revenue:n("sm-revenue"),
+    notes:document.getElementById("sm-notes").value.trim(),
+    createdBy:currentProfile.name, createdAt:serverTimestamp(),
+  });
+  document.getElementById("social-modal")?.remove();
+  toast("Stats saved ✓"); renderAnalytics();
+};
 
-// ══════════════════════════════════════════════
-// SALES BOARD
-// ══════════════════════════════════════════════
-async function renderSalesBoard() {
-  setMain(`
-  <div class="page-title">Sales</div>
-  <div class="metrics">
-    <div class="metric"><div class="ml">Revenue (May)</div><div class="mv" style="font-size:18px">$42k</div><div class="ms">+8%</div></div>
-    <div class="metric"><div class="ml">New clients</div><div class="mv">7</div></div>
-    <div class="metric"><div class="ml">Deals closed</div><div class="mv">12</div></div>
-    <div class="metric"><div class="ml">Pipeline</div><div class="mv" style="font-size:18px">$91k</div></div>
-  </div>
-  <div class="card">
-    <div class="card-head"><div class="card-title">GHL Pipeline</div>
-      <a href="https://app.gohighlevel.com" target="_blank" class="btn primary">Open GHL →</a></div>
-    <p style="font-size:13px;color:var(--text2);padding:8px 0">Connect GHL CRM to see your live pipeline here. For now, use the button above to open GHL directly.</p>
-  </div>`);
-}
+window.deleteSocialStat = async function(id) {
+  if(!confirm("Delete this stat entry?")) return;
+  await deleteDoc(doc(db,"social_stats",id));
+  toast("Deleted ✓"); renderAnalytics();
+};
 
 // ══════════════════════════════════════════════
 // SETTINGS (admin only)
@@ -1145,11 +2208,43 @@ async function renderSalesBoard() {
 async function renderSettings() {
   if (!isAdmin()) { setMain(`<div class="page-title">Settings</div><p>Access restricted.</p>`); return; }
   setMain(`
-  <div class="page-title">Settings</div>
+  <div class="page-title">⚙️ Settings</div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">Quick links</div>
+      <button class="btn primary" onclick="openAddLinkModal()">+ Add link</button></div>
+    <div id="links-settings-list">
+      ${DEFAULT_LINKS.map((l,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)">
+          <span style="font-size:18px;width:26px">${l.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500">${l.name}</div>
+            <input type="text" value="${l.url}" id="link-url-${i}"
+              style="width:100%;margin-top:3px;font-size:12px;padding:5px 8px;border-radius:5px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text)" />
+          </div>
+          <button class="btn" style="font-size:11px" onclick="saveLink(${i})">Save</button>
+          <button class="btn danger" style="font-size:11px" onclick="deleteLink(${i})">✕</button>
+        </div>`).join("")}
+    </div>
+  </div>
+
   <div class="two-col">
     <div class="card">
+      <div class="card-head"><div class="card-title">Task templates</div>
+        <button class="btn primary" onclick="openNewTemplateModal()">+ New template</button></div>
+      ${Object.entries(TASK_TEMPLATES).map(([name,steps])=>`
+        <div style="padding:9px 0;border-bottom:0.5px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="flex:1;font-size:13px;font-weight:500">${name}</span>
+            <span style="font-size:11px;color:var(--text2)">${steps.length} steps</span>
+            <button class="btn" style="font-size:11px" onclick="openTemplateModalForUse('${name}')">Use</button>
+            <button class="btn danger" style="font-size:11px" onclick="deleteTemplate('${name}')">✕</button>
+          </div>
+        </div>`).join("")}
+    </div>
+
+    <div class="card">
       <div class="card-head"><div class="card-title">Team members</div></div>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">To add/edit team members, update the TEAM_PROFILES object at the top of index.html, then create their account in Firebase Authentication.</p>
       ${Object.entries(TEAM_PROFILES).map(([email,p])=>`
         <div class="team-row">
           <div class="avatar" style="width:28px;height:28px;font-size:10px;background:${p.color};color:${p.tc}">${p.init}</div>
@@ -1157,39 +2252,113 @@ async function renderSettings() {
             <div style="font-size:10px;color:var(--text2)">${email}</div></div>
           ${badge("info",p.access)}
         </div>`).join("")}
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="card-title">Task templates</div></div>
-      ${Object.entries(TASK_TEMPLATES).map(([name,steps])=>`
-        <div style="padding:8px 0;border-bottom:0.5px solid var(--border)">
-          <div style="font-size:13px;font-weight:500;margin-bottom:4px">${name}</div>
-          <div style="font-size:11px;color:var(--text2)">${steps.length} steps</div>
-          <button class="btn" style="font-size:11px;margin-top:4px" onclick="applyTemplateFromSettings('${name}')">Use template</button>
-        </div>`).join("")}
+      <p style="font-size:11px;color:var(--text3);margin-top:10px">To add members: create them in Firebase Auth, then add their email to TEAM_PROFILES in the code.</p>
     </div>
   </div>
+
   <div class="card">
-    <div class="card-head"><div class="card-title">Quick links — edit URLs</div></div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Update the Google Drive URLs for each shared drive below.</p>
-    ${DEFAULT_LINKS.map((l,i)=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)">
-        <span style="font-size:16px;width:24px">${l.icon}</span>
-        <span style="font-size:13px;font-weight:500;min-width:120px">${l.name}</span>
-        <input type="text" value="${l.url}" id="link-url-${i}" style="flex:1;font-size:12px;padding:5px 8px;border-radius:5px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text)" />
-        <button class="btn" style="font-size:11px" onclick="saveLink(${i})">Save</button>
-      </div>`).join("")}
+    <div class="card-head"><div class="card-title">📅 Google Calendar embed</div></div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px">In Google Calendar → Settings → your calendar → "Integrate calendar" → copy the embed URL</p>
+    <div class="add-row">
+      <input type="text" id="cal-embed-url" placeholder="https://calendar.google.com/calendar/embed?src=..." style="flex:1"/>
+      <button class="btn primary" onclick="saveCalendarEmbed()">Save</button>
+    </div>
   </div>`);
 }
 
-window.applyTemplateFromSettings = function(name) {
-  openTaskModal();
-  setTimeout(() => openTemplateModal(), 100);
+window.saveCalendarEmbed = async function() {
+  const url = document.getElementById("cal-embed-url").value.trim();
+  if(!url) return;
+  await setDoc(doc(db,"settings","calendar"),{embedUrl:url, updatedBy:currentProfile.name, updatedAt:serverTimestamp()});
+  toast("Calendar embed saved ✓");
+};
+
+window.openAddLinkModal = function() {
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay"; modal.id = "addlink-modal";
+  modal.innerHTML = `<div class="modal" onclick="event.stopPropagation()">
+    <h3>Add quick link</h3>
+    <div class="modal-row"><label>Icon (emoji)</label><input type="text" id="nl-icon" value="🔗" style="width:60px"/></div>
+    <div class="modal-row"><label>Name</label><input type="text" id="nl-name" placeholder="e.g. Stripe"/></div>
+    <div class="modal-row"><label>Description</label><input type="text" id="nl-desc" placeholder="e.g. Payments"/></div>
+    <div class="modal-row"><label>URL</label><input type="text" id="nl-url" placeholder="https://..."/></div>
+    <div class="modal-row"><label>Visible to</label><select id="nl-roles">
+      <option value="all">Everyone</option>
+      <option value="ceo,coo">Admins only (Jaz + Sophia)</option>
+      <option value="sales">Sales (Andres)</option>
+      <option value="editor,design">Content team</option>
+    </select></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('addlink-modal').remove()">Cancel</button>
+      <button class="btn primary" onclick="addNewLink()">Add link</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+};
+
+window.addNewLink = function() {
+  const icon = document.getElementById("nl-icon").value||"🔗";
+  const name = document.getElementById("nl-name").value.trim(); if(!name) return;
+  const desc = document.getElementById("nl-desc").value.trim();
+  const url  = document.getElementById("nl-url").value.trim(); if(!url) return;
+  const rolesVal = document.getElementById("nl-roles").value;
+  const roles = rolesVal === "all" ? ["all"] : rolesVal.split(",");
+  DEFAULT_LINKS.push({id:"custom-"+Date.now(), icon, name, desc, url, roles});
+  document.getElementById("addlink-modal")?.remove();
+  toast("Link added ✓"); renderSettings();
+};
+
+window.deleteLink = function(i) {
+  if(!confirm("Remove this link?")) return;
+  DEFAULT_LINKS.splice(i,1);
+  toast("Link removed"); renderSettings();
 };
 
 window.saveLink = function(i) {
   DEFAULT_LINKS[i].url = document.getElementById(`link-url-${i}`).value.trim();
-  toast("Link updated ✓");
+  toast("Link saved ✓");
 };
+
+window.openNewTemplateModal = function() {
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay"; modal.id = "new-tmpl-modal";
+  modal.innerHTML = `<div class="modal" onclick="event.stopPropagation()">
+    <h3>New task template</h3>
+    <div class="modal-row"><label>Template name</label><input type="text" id="nt-name" placeholder="e.g. Webinar prep"/></div>
+    <div class="modal-row"><label>Steps (one per line)</label>
+      <textarea id="nt-steps" style="min-height:160px" placeholder="Step 1&#10;Step 2&#10;Step 3"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('new-tmpl-modal').remove()">Cancel</button>
+      <button class="btn primary" onclick="saveNewTemplate()">Save template</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+};
+
+window.saveNewTemplate = function() {
+  const name  = document.getElementById("nt-name").value.trim(); if(!name) return;
+  const steps = document.getElementById("nt-steps").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  if(!steps.length) return;
+  TASK_TEMPLATES[name] = steps;
+  document.getElementById("new-tmpl-modal")?.remove();
+  toast("Template saved ✓"); renderSettings();
+};
+
+window.deleteTemplate = function(name) {
+  if(!confirm(`Delete template "${name}"?`)) return;
+  delete TASK_TEMPLATES[name];
+  toast("Template deleted"); renderSettings();
+};
+
+window.openTemplateModalForUse = function(name) {
+  openTaskModal();
+  setTimeout(() => {
+    openTemplateModal();
+    setTimeout(() => {}, 100);
+  }, 200);
+};
+
+window.applyTemplateFromSettings = window.openTemplateModalForUse;
 
 // ══════════════════════════════════════════════
 // Wire up login inside module (fixes onclick scope issue)
@@ -1279,7 +2448,7 @@ a{color:inherit;text-decoration:none}
 .badge{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600;flex-shrink:0;white-space:nowrap}
 .badge.high{background:var(--red-bg);color:var(--red)}
 .badge.med{background:var(--amber-bg);color:var(--amber)}
-.badge.low,.badge.approved,.badge.ceo,.badge.ops manager{background:var(--green-bg);color:var(--green)}
+.badge.low,.badge.approved,.badge.ceo,.badge.coo{background:var(--green-bg);color:var(--green)}
 .badge.done-b{background:var(--bg2);color:var(--text3)}
 .badge.info,.badge.coach,.badge.editor{background:var(--blue-bg);color:var(--blue)}
 .badge.pending,.badge.sales,.badge.design,.badge.service,.badge.copy{background:var(--amber-bg);color:var(--amber)}
@@ -1430,23 +2599,8 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
-<!-- CONTENT MODAL -->
-<div class="modal-overlay" id="content-modal" style="display:none" onclick="if(event.target===this)closeContentModal()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <h3>New content idea</h3>
-    <div class="modal-row"><label>Title / idea</label><input type="text" id="cm-title" placeholder="e.g. Lo que tu banco NO quiere que sepas..."/></div>
-    <div class="modal-row"><label>Stage</label>
-      <select id="cm-stage">${CONTENT_STAGES.map(s=>`<option>${s}</option>`).join("")}</select></div>
-    <div class="modal-row"><label>Type</label>
-      <select id="cm-type">${CONTENT_TYPES.map(t=>`<option>${t}</option>`).join("")}</select></div>
-    <div class="modal-row"><label>Assignee</label><select id="cm-assignee"></select></div>
-    <div class="modal-row"><label>Notes / inspiration link</label><textarea id="cm-notes" placeholder="Any context, inspiration URLs, notes..."></textarea></div>
-    <div class="modal-btns">
-      <button class="btn" onclick="closeContentModal()">Cancel</button>
-      <button class="btn primary" onclick="saveContent()">Add idea</button>
-    </div>
-  </div>
-</div>
+<!-- CONTENT MODAL (rendered by JS) -->
+<div class="modal-overlay" id="content-modal" style="display:none" onclick="if(event.target===this)closeContentModal()"></div>
 
 <!-- AI SCRIPT MODAL -->
 <div class="modal-overlay" id="ai-modal" style="display:none" onclick="if(event.target===this)closeAIModal()">
@@ -1455,7 +2609,12 @@ a{color:inherit;text-decoration:none}
     <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Uses Jaz's script style & voice. Enter a topic and get a ready-to-record script.</p>
     <div class="modal-row"><label>Topic / idea</label><input type="text" id="ai-topic" placeholder="e.g. Cómo invertir con $500 siendo inmigrante"/></div>
     <div class="modal-row"><label>Format</label>
-      <select id="ai-type"><option value="short">Short-form (60-90s Reel/TikTok)</option><option value="long">Long-form (YouTube)</option></select></div>
+      <select id="ai-type">
+        <option value="short">📱 Short-form (60-90s Reel/TikTok)</option>
+        <option value="long">▶️ Long-form YouTube (8-12 min)</option>
+        <option value="company">📊 Company/Investment Analysis</option>
+        <option value="class">🎓 Live Class / Webinar Script</option>
+      </select></div>
     <button class="btn primary" style="width:100%;margin-bottom:4px" onclick="generateScript()">Generate script</button>
     <div id="ai-result"></div>
     <div class="modal-btns" style="margin-top:8px">
