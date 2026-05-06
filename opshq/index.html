@@ -330,6 +330,129 @@ function setActiveNav(id) {
   if (el) el.classList.add("active");
 }
 
+async function renderTeam() {
+  const snap = await getDocs(collection(db,"tasks"));
+  const tasks = snap.docs.map(d=>d.data());
+  const members = Object.entries(TEAM_PROFILES);
+  setMain(`
+  <div class="page-title">Team (${members.length})</div>
+  <div class="card">
+    ${members.map(([email,p])=>{
+      const open = tasks.filter(t=>t.assignee===p.name&&!t.done).length;
+      const done = tasks.filter(t=>t.assignee===p.name&&t.done).length;
+      return `<div class="team-row">
+        <div class="avatar" style="width:34px;height:34px;font-size:12px;background:${p.color};color:${p.tc}">${p.init}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">${p.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${p.role}</div></div>
+        <span class="badge info">${p.access}</span>
+        <span style="font-size:12px;color:var(--text2)">${open} open · ${done} done</span>
+      </div>`;}).join("")}
+  </div>`);
+}
+
+async function renderTimeOff() {
+  if (isAdmin()) await renderAdminTimeOff();
+  else await renderMemberTimeOff();
+}
+
+async function renderGoals() {
+  const snap = await getDocs(query(collection(db,"goals"), orderBy("createdAt","desc")));
+  const goals = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const SM = {track:{cls:"g",label:"On track",c:"var(--green)"},risk:{cls:"a",label:"At risk",c:"var(--amber)"},behind:{cls:"r",label:"Behind",c:"var(--red)"}};
+  setMain(`
+  <div class="page-title">Goals — Q2 2026</div>
+  <div class="metrics">
+    <div class="metric"><div class="ml">Total</div><div class="mv">${goals.length}</div></div>
+    <div class="metric"><div class="ml">On track</div><div class="mv" style="color:var(--green)">${goals.filter(g=>g.status==="track").length}</div></div>
+    <div class="metric"><div class="ml">At risk</div><div class="mv" style="color:var(--amber)">${goals.filter(g=>g.status==="risk").length}</div></div>
+    <div class="metric"><div class="ml">Behind</div><div class="mv" style="color:var(--red)">${goals.filter(g=>g.status==="behind").length}</div></div>
+  </div>
+  <div class="card">
+    ${goals.length ? goals.map(g=>{const s=SM[g.status]||SM.track;return`
+      <div class="goal-row">
+        <div style="flex:1.2;min-width:0"><div style="font-size:13px;font-weight:500">${g.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${g.cat} · ${g.owner||""}</div></div>
+        <div style="flex:1.5"><div class="track"><div class="fill ${s.cls}" style="width:${g.pct||0}%"></div></div></div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2);min-width:32px;text-align:right">${g.pct||0}%</div>
+        <span style="font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600;color:${s.c};background:${s.c}18">${s.label}</span>
+        ${isAdmin()?`<button class="icon-btn" onclick="editGoal('${g.id}')">✏️</button>`:""}
+      </div>`;}).join("") : empty("No goals yet — add one below")}
+    ${isAdmin()?`<button class="btn primary" style="margin-top:12px" onclick="openGoalModal()">+ Add goal</button>`:""}
+  </div>`);
+}
+
+async function renderFinancials() {
+  if (!isFinance()) { setMain(`<div class="page-title">Financials</div><p style="color:var(--text2)">Access restricted.</p>`); return; }
+  const snap = await getDocs(query(collection(db,"financials"), orderBy("date","desc")));
+  const items = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const revenue  = items.filter(i=>i.type==="revenue").reduce((s,i)=>s+(i.amount||0),0);
+  const expenses = items.filter(i=>i.type==="expense").reduce((s,i)=>s+(i.amount||0),0);
+  const payroll  = items.filter(i=>i.type==="payroll").reduce((s,i)=>s+(i.amount||0),0);
+  const net = revenue - expenses - payroll;
+  setMain(`
+  <div class="page-title">Financials</div>
+  <div class="metrics">
+    <div class="metric"><div class="ml">Revenue</div><div class="mv" style="color:var(--green)">$${revenue.toLocaleString()}</div></div>
+    <div class="metric"><div class="ml">Payroll</div><div class="mv" style="color:var(--amber)">$${payroll.toLocaleString()}</div></div>
+    <div class="metric"><div class="ml">Expenses</div><div class="mv" style="color:var(--red)">$${expenses.toLocaleString()}</div></div>
+    <div class="metric"><div class="ml">Net</div><div class="mv" style="color:${net>=0?"var(--green)":"var(--red)"}">$${net.toLocaleString()}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">All entries</div>
+      <button class="btn primary" onclick="openFinancialModal()">+ Add entry</button></div>
+    ${items.length ? items.map(i=>`
+      <div class="pay-row">
+        <span style="font-size:18px">${i.type==="revenue"?"💚":i.type==="payroll"?"💛":"🔴"}</span>
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">${i.label||i.type}</div>
+          <div style="font-size:11px;color:var(--text2)">${i.type} · ${fmtDate(i.date)} ${i.note?`· ${i.note}`:""}</div></div>
+        <span style="font-size:14px;font-weight:600;color:${i.type==="revenue"?"var(--green)":"var(--red)"}">${i.type==="revenue"?"+":"-"}$${(i.amount||0).toLocaleString()}</span>
+        ${isAdmin()?`<button class="icon-btn" onclick="deleteFinancial('${i.id}')">🗑</button>`:""}
+      </div>`).join("") : empty("No entries yet — add revenue, payroll, and expenses")}
+  </div>`);
+}
+
+async function renderUpdates() {
+  const snap = await getDocs(query(collection(db,"announcements"), orderBy("createdAt","desc")));
+  const ann  = snap.docs.map(d=>({id:d.id,...d.data()}));
+  setMain(`
+  <div class="page-title">Updates</div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">Team announcements</div></div>
+    <div id="ann-list">
+      ${ann.map(a=>`<div class="announce">
+        <div class="announce-title">${a.text}</div>
+        <div class="announce-meta">Posted by ${a.by} · ${a.createdAt?.toDate?.()?.toLocaleDateString()||"recently"}</div>
+      </div>`).join("")||empty("No updates yet")}
+    </div>
+    ${isAdmin()?`
+    <div class="add-row" style="margin-top:12px">
+      <input type="text" id="ann-text" placeholder="Post an update (payroll info NOT shown here)..."/>
+      <button class="btn primary" onclick="postUpdate()">Post</button>
+    </div>`:""}
+  </div>`);
+}
+
+async function renderLinks() {
+  // Try to load custom links from Firestore, fall back to defaults
+  let myLinks = links.filter(l => l.roles.includes("all") || l.roles.includes(currentProfile.access));
+  try {
+    const snap = await getDocs(collection(db,"links"));
+    if (snap.size > 0) myLinks = snap.docs.map(d=>d.data()).filter(l=>!l.roles||l.roles.includes("all")||l.roles.includes(currentProfile.access));
+  } catch(e) {}
+  setMain(`
+  <div class="page-title">Quick links</div>
+  <div class="card">
+    <div class="links-grid">
+      ${myLinks.map(l=>`
+        <a class="link-card" href="${l.url}" target="_blank" rel="noopener">
+          <div class="link-icon">${l.icon}</div>
+          <div class="link-name">${l.name}</div>
+          <div class="link-desc">${l.desc}</div>
+        </a>`).join("")}
+    </div>
+  </div>`);
+}
+
 window.go = function(view) {
   currentView = view;
   setActiveNav(view);
@@ -2370,6 +2493,187 @@ document.addEventListener("DOMContentLoaded", () => {
   const email = document.getElementById("l-email");
   if (email) email.addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); });
 });
+async function renderAdminTimeOff() {
+  const snap = await getDocs(query(collection(db,"timeoff"), orderBy("createdAt","desc")));
+  const reqs = snap.docs.map(d=>({id:d.id,...d.data()}));
+  setMain(`
+  <div class="page-title">Time off</div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">All requests</div></div>
+    ${reqs.length ? reqs.map(r=>`
+      <div class="off-req">
+        ${avatar(r.name,28)}
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">${r.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${fmtDate(r.from)}${r.to!==r.from?" – "+fmtDate(r.to):""} · ${r.reason}</div></div>
+        ${badge(r.status,r.status)}
+        ${r.status==="pending"?`
+          <button class="btn primary" style="font-size:11px;padding:4px 8px" onclick="approveOff('${r.id}',true)">Approve</button>
+          <button class="btn danger"  style="font-size:11px;padding:4px 8px" onclick="approveOff('${r.id}',false)">Deny</button>`:""
+        }
+      </div>`).join("") : empty("No requests")}
+  </div>`);
+}
+
+
+async function renderMemberTimeOff() {
+  const snap = await getDocs(query(collection(db,"timeoff"), where("name","==",currentProfile.name), orderBy("createdAt","desc")));
+  const mine = snap.docs.map(d=>({id:d.id,...d.data()}));
+  setMain(`
+  <div class="page-title">Request time off</div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">My requests</div></div>
+    ${mine.length ? mine.map(r=>`
+      <div class="off-req">
+        <div style="flex:1"><div style="font-size:13px;font-weight:500">${fmtDate(r.from)}${r.to!==r.from?" – "+fmtDate(r.to):""}</div>
+          <div style="font-size:11px;color:var(--text2)">${r.reason}</div></div>
+        ${badge(r.status,r.status)}
+      </div>`).join("") : empty("No requests yet")}
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">New request</div></div>
+    <div class="date-inputs">
+      <div><label>From</label><input type="date" id="off-from"/></div>
+      <div><label>To</label><input type="date" id="off-to"/></div>
+    </div>
+    <div class="add-row" style="margin-top:0">
+      <input type="text" id="off-reason" placeholder="Reason (optional)"/>
+      <button class="btn primary" onclick="submitOff()">Submit</button>
+    </div>
+  </div>`);
+}
+
+
+function contentCardHTML(c) {
+  const typeColors = {
+    "Youtube Inspired":"tag-content","Community Question":"tag-link",
+    "Mini Course":"tag-sop","Short Form":"tag-idea",
+    "Long Form":"tag-content","Carousel":"tag-idea","Other":"tag-link"
+  };
+  return `
+  <div class="board-card" onclick="openContentDetail('${c.id}')">
+    <div class="board-card-title">${c.title}</div>
+    ${c.assignee?`<div style="font-size:10px;color:var(--text2);margin:4px 0">${c.assignee}</div>`:""}
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+      ${c.type?`<span class="board-tag ${typeColors[c.type]||"tag-link"}">${c.type}</span>`:""}
+      ${c.scriptApproved?`<span class="board-tag tag-sop">Script ✓</span>`:""}
+      ${c.canvaReady?`<span class="board-tag tag-content">Canva ✓</span>`:""}
+      ${c.uploaded?`<span class="board-tag tag-sop">Uploaded ✓</span>`:""}
+    </div>
+  </div>`;
+}
+
+let contentModalStage = "Bank of Ideas";
+
+
+window.postUpdate = async function() {
+  const inp = document.getElementById("ann-text");
+  if (!inp?.value.trim()) return;
+  await addDoc(collection(db,"announcements"),{text:inp.value.trim(),by:currentProfile.name,createdAt:serverTimestamp()});
+  toast("Posted ✓"); renderUpdates();
+};
+
+
+window.openFinancialModal = function() {
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay"; modal.id = "fin-modal";
+  modal.innerHTML = `<div class="modal" onclick="event.stopPropagation()">
+    <h3>Add financial entry</h3>
+    <div class="modal-row"><label>Type</label><select id="fn-type"><option value="revenue">Revenue</option><option value="payroll">Payroll</option><option value="expense">Expense</option></select></div>
+    <div class="modal-row"><label>Label</label><input type="text" id="fn-label" placeholder="e.g. High-ticket sales, Alli salary, Software tool"/></div>
+    <div class="modal-row"><label>Amount ($)</label><input type="number" id="fn-amount" min="0" placeholder="0"/></div>
+    <div class="modal-row"><label>Date</label><input type="date" id="fn-date"/></div>
+    <div class="modal-row"><label>Note (optional)</label><input type="text" id="fn-note" placeholder="Any context..."/></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="document.getElementById('fin-modal').remove()">Cancel</button>
+      <button class="btn primary" onclick="saveFinancial()">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+};
+
+
+window.saveGoal = async function(id="") {
+  const name = document.getElementById("gm-name").value.trim(); if(!name) return;
+  const data = {
+    name, cat:document.getElementById("gm-cat").value,
+    owner:document.getElementById("gm-owner").value,
+    pct:parseInt(document.getElementById("gm-pct").value)||0,
+    status:document.getElementById("gm-status").value,
+  };
+  if (id) {
+    await updateDoc(doc(db,"goals",id), {...data, updatedAt:serverTimestamp()});
+    toast("Goal updated ✓");
+  } else {
+    await addDoc(collection(db,"goals"),{...data, createdAt:serverTimestamp()});
+    toast("Goal added ✓");
+  }
+  document.getElementById("goal-modal")?.remove();
+  renderGoals();
+};
+
+
+window.editGoal = async function(id) {
+  const snap = await getDoc(doc(db,"goals",id));
+  openGoalModal(id, snap.data());
+};
+
+
+window.deleteGoal = async function(id) {
+  if(!confirm("Delete this goal?")) return;
+  await deleteDoc(doc(db,"goals",id));
+  document.getElementById("goal-modal")?.remove();
+  toast("Deleted"); renderGoals();
+};
+
+
+window.openGoalModal = function(id=null, existing=null) {
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay"; modal.id = "goal-modal";
+  modal.innerHTML = `<div class="modal" onclick="event.stopPropagation()">
+    <h3>${id?"Edit":"New"} goal</h3>
+    <div class="modal-row"><label>Goal name</label><input type="text" id="gm-name" value="${existing?.name||""}" placeholder="e.g. Reach $50k MRR"/></div>
+    <div class="modal-row"><label>Category</label><select id="gm-cat">
+      ${["Revenue","Sales","Content","Team","Support","Training","Other"].map(c=>`<option ${existing?.cat===c?"selected":""}>${c}</option>`).join("")}
+    </select></div>
+    <div class="modal-row"><label>Owner</label><select id="gm-owner">
+      ${Object.values(TEAM_PROFILES).map(p=>`<option value="${p.name}" ${existing?.owner===p.name?"selected":""}>${p.name}</option>`).join("")}
+    </select></div>
+    <div class="modal-row"><label>Progress %</label><input type="number" id="gm-pct" min="0" max="100" value="${existing?.pct||0}"/></div>
+    <div class="modal-row"><label>Status</label><select id="gm-status">
+      <option value="track" ${existing?.status==="track"?"selected":""}>On track</option>
+      <option value="risk"  ${existing?.status==="risk" ?"selected":""}>At risk</option>
+      <option value="behind"${existing?.status==="behind"?"selected":""}>Behind</option>
+    </select></div>
+    <div class="modal-btns">
+      ${id?`<button class="btn danger" onclick="deleteGoal('${id}')">Delete</button>`:""}
+      <button class="btn" onclick="document.getElementById('goal-modal').remove()">Cancel</button>
+      <button class="btn primary" onclick="saveGoal('${id||""}')">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+};
+
+
+window.saveFinancial = async function() {
+  const amount = parseFloat(document.getElementById("fn-amount").value); if(!amount) return;
+  await addDoc(collection(db,"financials"),{
+    type:   document.getElementById("fn-type").value,
+    label:  document.getElementById("fn-label").value.trim(),
+    amount, date: document.getElementById("fn-date").value,
+    note:   document.getElementById("fn-note").value.trim(),
+    createdAt: serverTimestamp(), createdBy: currentProfile.name,
+  });
+  document.getElementById("fin-modal")?.remove();
+  toast("Entry saved ✓"); renderFinancials();
+};
+
+
+window.filterContent = async function(type,btn) {
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  await loadContentBoard(type==="all"?"all":type);
+};
+
 window.doLogin  = doLogin;
 window.doLogout = doLogout;
 </script>
